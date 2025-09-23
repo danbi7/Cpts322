@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+build/
+
+# Maven
+target/
+
+# IntelliJ
+*.iml
+.idea/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+.env
+
+!src/main/resources/
+src/main/resources/*.yml
+src/main/resources/*.properties
