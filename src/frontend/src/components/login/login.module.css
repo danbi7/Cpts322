@@ -129,6 +129,21 @@
   text-decoration: underline;
 }
 
+.forgotPasswordLink {
+  color: #E11134;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  display: block;
+}
+
+.forgotPasswordLink:hover {
+  color: #a20520;
+  text-decoration: underline;
+}
+
 .loginButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;

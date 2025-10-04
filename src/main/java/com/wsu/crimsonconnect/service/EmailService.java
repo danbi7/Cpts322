@@ -25,7 +25,7 @@ public class EmailService{
     // Password reset email
     public void sendPasswordResetEmail(String toEmail, String token) {
         String subject = "Password Reset - Crimson Connect";
-        String resetUrl = "http://localhost:8080/api/auth/reset-password?token=" + token;
+        String resetUrl = "http://localhost:3000/reset-password?token=" + token;
 
         String message = "Click the link below to reset your password:\n" + resetUrl;
 

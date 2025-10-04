@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import styles from './login.module.css'
+import { Link, useNavigate } from 'react-router-dom';
+import styles from './login.module.css';
+import { authAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormData {
   email: string;
@@ -8,6 +10,16 @@ interface LoginFormData {
 }
 
 const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
+  
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+  
   // Form data state
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
@@ -34,13 +46,12 @@ const LoginPage: React.FC = () => {
     setMessageType('');
 
     try {
-      // *Implement actual login API call when backend is ready*
-      console.log('Login attempt:', formData);
+      const response = await authAPI.login(formData);
       
-      // Fake API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update authentication state
+      login(response.token);
       
-      setMessage('Login successful! (test message)');
+      setMessage('Login successful! Redirecting...');
       setMessageType('success');
       
       // Reset form
@@ -48,8 +59,16 @@ const LoginPage: React.FC = () => {
         email: '',
         password: '',
       });
+      
+      // Redirect to dashboard or home page after successful login
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+      
     } catch (error: any) {
-      setMessage('Login failed. Please check your email and password and try again.');
+      console.error('Login error:', error);
+      const errorMessage = 'Login failed. Please check your email and password and try again.';
+      setMessage(errorMessage);
       setMessageType('error');
     } finally {
       setLoading(false);
@@ -99,6 +118,7 @@ const LoginPage: React.FC = () => {
 
         <div className={styles.loginFooter}>
           <p>Don't have an account? <Link to="/signup" className={styles.signupLink}>Sign up here</Link></p>
+          <p><Link to="/forgot-password" className={styles.forgotPasswordLink}>Forgot your password?</Link></p>
         </div>
       </div>
     </div>

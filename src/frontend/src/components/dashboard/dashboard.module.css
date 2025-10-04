@@ -1,0 +1,98 @@
+.dashboardContainer {
+  min-height: 100vh;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.dashboardContent {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 60px 40px;
+  width: 100%;
+  max-width: 450px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.dashboardHeader {
+  margin-bottom: 30px;
+}
+
+.dashboardTitle {
+  color: #1a1a1a;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  background: linear-gradient(135deg, #E11134, #a20520);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Success Message */
+.successMessage {
+  color: #1a1a1a;
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin: 0 0 40px 0;
+  line-height: 1.4;
+}
+
+.logoutButton {
+  background: linear-gradient(135deg, #E11134, #a20520);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(225, 17, 52, 0.3);
+  width: 100%;
+  max-width: 200px;
+}
+
+.logoutButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(225, 17, 52, 0.4);
+  background: linear-gradient(135deg, #a20520, #7a0418);
+}
+
+.logoutButton:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboardContainer {
+    padding: 10px;
+  }
+  
+  .dashboardContent {
+    padding: 40px 20px;
+  }
+  
+  .dashboardTitle {
+    font-size: 1.8rem;
+  }
+  
+  .successMessage {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboardTitle {
+    font-size: 1.5rem;
+  }
+  
+  .successMessage {
+    font-size: 1rem;
+  }
+}
