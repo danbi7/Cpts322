@@ -24,4 +24,5 @@ public class UserController {
         userService.verifyEmail(token);
         return ResponseEntity.ok("Email verified successfully!");
     }
+
 }
