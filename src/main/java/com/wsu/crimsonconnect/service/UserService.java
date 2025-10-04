@@ -52,8 +52,31 @@ public class UserService {
             throw new IllegalArgumentException("Invalid or expired verification token.");
         }
 
-        userMapper.enableUser(verificationToken.getUserId());
-        verificationTokenMapper.deleteToken(verificationToken.getEmailId());
+        userMapper.enableUser(verificationToken.getUserId()); // changed to token
+        verificationTokenMapper.deleteToken(token);
+
+    }
+    // request password reset
+    public void requestPasswordReset(String email) {
+        User user = userMapper.findByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("No account found with that email.");
+        }
+
+        String token = UUID.randomUUID().toString();
+        verificationTokenMapper.insertToken(user.getUserId(), token, LocalDateTime.now().plusHours(1));
+        emailService.sendPasswordResetEmail(user.getEmail(), token);
+    }
+
+    // reset password
+    public void resetPassword(String token, String newPassword) {
+        var verificationToken = verificationTokenMapper.findByToken(token);
+        if (verificationToken == null || verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Invalid or expired reset token.");
+        }
+
+        userMapper.updatePassword(verificationToken.getUserId(), passwordEncoder.encode(newPassword));
+        verificationTokenMapper.deleteToken(token);
     }
 
 }

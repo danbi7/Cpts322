@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class VerificationToken {
-    private String emailId;
     private Long userId;
     private String token;
     private LocalDateTime expiryDate;

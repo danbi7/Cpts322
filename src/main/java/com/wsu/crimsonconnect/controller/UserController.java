@@ -25,4 +25,19 @@ public class UserController {
         return ResponseEntity.ok("Email verified successfully!");
     }
 
+    // Request password reset (send email)
+    @PostMapping("/reset-password-request")
+    public ResponseEntity<String> requestPasswordReset(@RequestParam String email) {
+        userService.requestPasswordReset(email);
+        return ResponseEntity.ok("Password reset email sent (if the account exists).");
+    }
+
+    //  Reset password
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam String token,
+                                                @RequestParam String newPassword) {
+        userService.resetPassword(token, newPassword);
+        return ResponseEntity.ok("Password has been reset successfully.");
+    }
+
 }

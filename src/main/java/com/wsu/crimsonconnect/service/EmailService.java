@@ -22,4 +22,17 @@ public class EmailService{
         mailMessage.setText(message);
         mailSender.send(mailMessage);
     }
+    // Password reset email
+    public void sendPasswordResetEmail(String toEmail, String token) {
+        String subject = "Password Reset - Crimson Connect";
+        String resetUrl = "http://localhost:8080/api/auth/reset-password?token=" + token;
+
+        String message = "Click the link below to reset your password:\n" + resetUrl;
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(toEmail);
+        mailMessage.setSubject(subject);
+        mailMessage.setText(message);
+        mailSender.send(mailMessage);
+    }
 }
