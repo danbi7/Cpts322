@@ -18,4 +18,6 @@ public interface UserMapper {
 
     @Update("UPDATE users SET enabled = true WHERE user_id = #{userId}")
     void enableUser(Long userId);
+    @Update("UPDATE users SET password_hash = #{passwordHash} WHERE user_id = #{userId}")
+    void updatePassword(Long userId, String passwordHash);
 }

@@ -17,6 +17,6 @@ public interface VerificationTokenMapper {
     @Select("SELECT * FROM email_verification_token WHERE token = #{token}")
     VerificationToken findByToken(String token);
 
-    @Delete("DELETE FROM email_verification_token WHERE email_id = #{emailId}")
-    void deleteToken(String email_id);
+    @Delete("DELETE FROM email_verification_token WHERE token = #{token}")
+    void deleteToken(String token); // changed deleteToken to use token instead of emailId, better for reset link
 }
