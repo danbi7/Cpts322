@@ -45,6 +45,7 @@ public class UserService {
         emailService.sendEmail(user.getEmail(), token);
     }
 
+
     public void verifyEmail(String token){
         var verificationToken = verificationTokenMapper.findByToken(token);
         if(verificationToken == null || verificationToken.getExpiryDate().isBefore(LocalDateTime.now())){
@@ -54,4 +55,5 @@ public class UserService {
         userMapper.enableUser(verificationToken.getUserId());
         verificationTokenMapper.deleteToken(verificationToken.getEmailId());
     }
+
 }
