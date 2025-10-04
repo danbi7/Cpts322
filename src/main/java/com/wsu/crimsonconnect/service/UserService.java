@@ -1,6 +1,8 @@
 package com.wsu.crimsonconnect.service;
 
 import com.wsu.crimsonconnect.domain.User;
+import com.wsu.crimsonconnect.dto.LoginRequest;
+import com.wsu.crimsonconnect.dto.LoginResponse;
 import com.wsu.crimsonconnect.dto.SignupRequest;
 import com.wsu.crimsonconnect.mapper.UserMapper;
 import com.wsu.crimsonconnect.mapper.VerificationTokenMapper;
@@ -18,6 +20,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final VerificationTokenMapper verificationTokenMapper;
     private final EmailService emailService;
+    private final JwtService jwtService;
 
     public void registerUser(SignupRequest request){
         if (userMapper.findByUsername(request.getUsername()) != null) {
@@ -79,4 +82,19 @@ public class UserService {
         verificationTokenMapper.deleteToken(token);
     }
 
+    public LoginResponse login(LoginRequest request){
+        User user = userMapper.findByEmail(request.getEmail());
+
+        if(user == null || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())){
+            throw new RuntimeException("Invalid or expired password.");
+        }
+
+        if(!user.getEnabled()){
+            throw new RuntimeException("Email not verified.");
+        }
+
+        String token = jwtService.generateToken(user.getUsername());
+
+        return new LoginResponse(token);
+    }
 }

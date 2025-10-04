@@ -1,5 +1,7 @@
 package com.wsu.crimsonconnect.controller;
 
+import com.wsu.crimsonconnect.dto.LoginRequest;
+import com.wsu.crimsonconnect.dto.LoginResponse;
 import com.wsu.crimsonconnect.dto.SignupRequest;
 import com.wsu.crimsonconnect.service.UserService;
 import jakarta.validation.Valid;
@@ -40,4 +42,8 @@ public class UserController {
         return ResponseEntity.ok("Password has been reset successfully.");
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(userService.login(request));
+    }
 }
