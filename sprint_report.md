@@ -1,5 +1,5 @@
 # Sprint 1 Report
-Video Link: 
+Video Link: https://youtu.be/62aeviQ9x58?si=DQetRnuZLm1d5l2o
 
 ## What's New (User Facing)
 * Frontend setup with React (signup, login, reset password forms).
@@ -46,3 +46,4 @@ We had some blockers with GitHub merge conflicts and MySQL/SMTP setup but fixed 
 * Start study group feature (create/join groups).  
 * Add frontend form validation + better error handling.  
 * Begin adding automated tests.  
+
