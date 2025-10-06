@@ -47,3 +47,4 @@ We had some blockers with GitHub merge conflicts and MySQL/SMTP setup but fixed 
 * Add frontend form validation + better error handling.  
 * Begin adding automated tests.  
 
+
