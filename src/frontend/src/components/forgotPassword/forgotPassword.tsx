@@ -41,9 +41,7 @@ const ForgotPasswordPage: React.FC = () => {
       
     } catch (error: any) {
       console.error('Password reset request error:', error);
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          'Failed to send password reset email. Please try again.';
+      const errorMessage = 'No account found with that email address.';
       setMessage(errorMessage);
       setMessageType('error');
     } finally {

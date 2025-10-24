@@ -15,6 +15,8 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            {/*path to dashboard only in development*/}
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/" element={<SignupPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
