@@ -93,7 +93,7 @@ public class UserService {
             throw new RuntimeException("Email not verified.");
         }
 
-        String token = jwtService.generateToken(user.getUsername());
+        String token = jwtService.generateToken(user.getUsername(), user.getUserId());
 
         return new LoginResponse(token);
     }
