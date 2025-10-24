@@ -312,8 +312,8 @@ const Dashboard: React.FC = () => {
     try {
       // Mock action - replace with actual API call
       // await groupAPI.joinGroup(group.id);
-      setMessage(`Successfully ${buttonState.text.toLowerCase()} for ${group.name}`);
-      setMessageType('success');
+      // setMessage(`Successfully ${buttonState.text.toLowerCase()} for ${group.name}`);
+      // setMessageType('success');
     } catch (error: any) {
       console.error('Join group error:', error);
       setMessage('Failed to join group. Please try again.');
@@ -322,6 +322,8 @@ const Dashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+
 
   return (
     <div className={styles.dashboardContainer}>
@@ -378,8 +380,8 @@ const Dashboard: React.FC = () => {
             {/* User Section */}
             <div className={styles.userSection}>
               {isAuthenticated ? (
-                <div className={styles.profileIcon} onClick={() => {/* TODO: Open profile dropdown */}}>
-                  U
+                <div className={styles.profileIcon} onClick={() => window.location.href = '/profile'}>
+                  K
                 </div>
               ) : (
                 <>
@@ -592,11 +594,20 @@ const Dashboard: React.FC = () => {
                   const buttonState = getJoinButtonState(selectedGroup);
                   return (
                     <button
-                      onClick={() => handleJoinAction(selectedGroup)}
+                      onClick={() => {
+                        if (selectedGroup.isMember) {
+                          // If user is already a member, go to group page
+                          closeModal();
+                          window.location.href = `/group/${selectedGroup.id}`;
+                        } else {
+                          // If not a member, show join functionality (not implemented yet)
+                          handleJoinAction(selectedGroup);
+                        }
+                      }}
                       disabled={buttonState.disabled || loading}
                       className={`${styles.joinButton} ${styles[buttonState.variant]}`}
                     >
-                      {loading ? 'Processing...' : buttonState.text}
+                      {loading ? 'Processing...' : selectedGroup.isMember ? 'Go to Group' : buttonState.text}
                     </button>
                   );
                 })()}
@@ -611,6 +622,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
