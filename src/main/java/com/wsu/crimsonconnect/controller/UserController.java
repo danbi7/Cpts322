@@ -18,7 +18,7 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody SignupRequest request) {
         userService.registerUser(request);
-        return ResponseEntity.ok("Singup Successful! Please check your email for verification.");
+        return ResponseEntity.ok("Signup Successful! Please check your email for verification.");
     }
 
     @GetMapping("/verify")

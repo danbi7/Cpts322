@@ -72,6 +72,24 @@ export interface ResetPasswordRequest {
     newPassword: string;
 }
 
+export interface ProfileResponse {
+    username: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    nickname: string;
+    bio: string;
+    createdAt: Date;
+    profileImageUrl: string;
+}
+
+export interface ProfileUpdateRequest {
+    nickname: string;
+    bio: string;
+    profileImageUrl: string;
+}
+
+
 export const authAPI = {
     signup: async (data: SignupRequest) => {
         const response = await api.post('/auth/signup', data);
@@ -103,5 +121,23 @@ export const authAPI = {
         return response.data;
     },
 };
+
+export const profileAPI = {
+    getProfile: async (): Promise<ProfileResponse> => {
+        const response = await api.get('/profile');
+        return response.data;
+    },
+    
+    updateProfile: async (data: ProfileUpdateRequest): Promise<ProfileResponse> => {
+        const response = await api.put('/profile', data);
+        return response.data;
+    },
+    
+    deleteProfile: async (): Promise<void> => {
+        const response = await api.delete('/profile');
+        return response.data;
+    },
+};
+
 
 export default api;

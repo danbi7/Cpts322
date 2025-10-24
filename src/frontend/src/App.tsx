@@ -8,6 +8,8 @@ import Dashboard from './components/dashboard/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import ForgotPasswordPage from './components/forgotPassword/forgotPassword';
 import ResetPasswordPage from './components/resetPassword/resetPassword';
+import GroupPage from './components/group/GroupPage';
+import ProfilePage from './components/profile/ProfilePage';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            {/*path to dashboard only in development*/}
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/" element={<SignupPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
@@ -25,6 +29,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/group/:groupId" 
+              element={
+                <ProtectedRoute>
+                  <GroupPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               } 
             />
