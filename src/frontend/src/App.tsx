@@ -10,6 +10,7 @@ import ForgotPasswordPage from './components/forgotPassword/forgotPassword';
 import ResetPasswordPage from './components/resetPassword/resetPassword';
 import GroupPage from './components/group/GroupPage';
 import ProfilePage from './components/profile/ProfilePage';
+import ProfileCreation from './components/profileCreation/ProfileCreation';
 
 function App() {
   return (
@@ -17,11 +18,10 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            {/*path to dashboard only in development*/}
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/" element={<SignupPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/profile-creation" element={<ProfileCreation />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route 

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import NavigationBar from '../NavigationBar';
 import styles from './dashboard.module.css';
 
 // Type Definitions
@@ -208,7 +209,7 @@ const Dashboard: React.FC = () => {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
 
-  const GROUPS_PER_PAGE = 6;
+  const GROUPS_PER_PAGE = 9;
 
   // Filter and search groups
   const filteredGroups = useMemo(() => {
@@ -327,76 +328,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className={styles.dashboardContainer}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.headerContent}>
-            {/* Logo */}
-            <div>
-              <button 
-                onClick={() => window.location.reload()}
-                className={styles.logo}
-              >
-                Crimson Connect
-              </button>
-            </div>
-
-            {/* Search and Category */}
-            <div className={styles.searchSection}>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value as CategoryType)}
-                className={styles.categorySelect}
-              >
-                <option value="all">All Categories</option>
-                <option value="cs">Computer Science</option>
-                <option value="math">Mathematics</option>
-                <option value="science">Science</option>
-                <option value="humanities">Humanities</option>
-              </select>
-
-              <div className={styles.searchWrapper}>
-                <input
-                  type="text"
-                  placeholder="Search study groups..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className={styles.searchInput}
-                />
-                <svg 
-                  className={styles.searchIcon}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
-
-            {/* User Section */}
-            <div className={styles.userSection}>
-              {isAuthenticated ? (
-                <div className={styles.profileIcon} onClick={() => window.location.href = '/profile'}>
-                  K
-                </div>
-              ) : (
-                <>
-                  <button className={styles.loginButton}>
-                    Log In
-                  </button>
-                  <button className={styles.signupButton}>
-                    Sign Up
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Navigation Bar */}
+      <NavigationBar />
 
       {/* Main Content */}
       <main className={styles.main}>
