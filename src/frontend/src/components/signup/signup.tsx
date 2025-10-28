@@ -4,7 +4,13 @@ import { authAPI, SignupRequest } from '../../services/api';
 import styles from './signup.module.css'
 
 const SignupPage: React.FC = () => {
-  // Form data state
+  useEffect(() => {
+    document.body.classList.add('signup-active');
+    return () => {
+      document.body.classList.remove('signup-active');
+    };
+  }, []);
+
   const [formData, setFormData] = useState<SignupRequest>({
     firstName: '',
     lastName: '',
