@@ -31,10 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
 
-        if (requestURI.startsWith("/api/auth/")) {
+        String uri = request.getRequestURI();
+        if (uri.contains("/api/auth/")) {
             chain.doFilter(request, response);
             return;
         }
+
 
         String authHeader = request.getHeader("Authorization");
 
