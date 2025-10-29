@@ -2,6 +2,7 @@ package com.wsu.crimsonconnect.mapper;
 
 import com.wsu.crimsonconnect.domain.StudyGroup;
 import org.apache.ibatis.annotations.*;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
 
@@ -150,6 +151,12 @@ public interface StudyGroupMapper {
     int addMember(@Param("groupId") Long groupId, @Param("userId") Long userId);
 
     @Insert("""
+        INSERT INTO study_group_members (group_id, user_id, role)
+        VALUES (#{groupId}, #{userId}, 'admin')
+    """)
+    int addAdmin(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Insert("""
         INSERT INTO study_group_requests (group_id, user_id, status)
         VALUES (#{groupId}, #{userId}, 'pending')
     """)
@@ -161,4 +168,34 @@ public interface StudyGroupMapper {
         WHERE group_id = #{groupId}
     """)
     int incrementMemberCount(@Param("groupId") Long groupId);
+
+    @Select("""
+        SELECT EXISTS(
+            SELECT 1 FROM study_group_members
+            WHERE group_id = #{groupId}
+            AND user_id = #{userId}
+            AND role = 'admin'
+        ) AS isAdmin
+    """)
+    boolean isAdmin(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Update("""
+        UPDATE study_group_requests
+        SET status = 'approved'
+        WHERE group_id = #{groupId} AND request_id = #{requestId}
+    """)
+    int approveRequest(@Param("groupId") Long groupId, @Param("requestId") Long requestId);
+
+    @Update("""
+        UPDATE study_group_requests
+        SET status = 'rejected'
+        WHERE group_id = #{groupId} AND request_id = #{requestId}
+    """)
+    int rejectRequest(@Param("groupId") Long groupId, @Param("requestId") Long requestId);
+
+    @Select("""
+        SELECT user_id FROM study_group_requests 
+        WHERE request_id = #{requestId}
+    """)
+    Long getRequestUserId(@Param("requestId") Long requestId);
 }

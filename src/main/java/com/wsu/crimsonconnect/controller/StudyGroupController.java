@@ -60,4 +60,14 @@ public class StudyGroupController {
     public String joinStudyGroup(@PathVariable Long groupId, @RequestParam Long userId) {
         return studyGroupService.joinStudyGroup(groupId, userId);
     }
+
+    @PostMapping("/{groupId}/requests/{requestId}/approve")
+    public String approveRequest(@PathVariable Long groupId, @PathVariable Long requestId, @RequestParam Long userId) {
+        return studyGroupService.approveRequest(groupId, requestId, userId);
+    }
+
+    @PostMapping("/{groupId}/requests/{requestId}/reject")
+    public String rejectRequest(@PathVariable Long groupId, @PathVariable Long requestId, @RequestParam Long userId) {
+        return studyGroupService.rejectRequest(groupId, requestId,userId);
+    }
 }

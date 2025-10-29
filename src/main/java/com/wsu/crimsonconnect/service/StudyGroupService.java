@@ -83,6 +83,9 @@ public class StudyGroupService {
                 .build();
 
         studyGroupMapper.createStudyGroup(group, userId);
+        studyGroupMapper.addAdmin(group.getGroupId(), userId);
+        studyGroupMapper.incrementMemberCount(group.getGroupId());
+
         return group.getGroupId();
     }
 
@@ -132,5 +135,29 @@ public class StudyGroupService {
             studyGroupMapper.incrementMemberCount(groupId);
             return "Joined study group successfully.";
         }
+    }
+
+    public String approveRequest(Long groupId, Long requestId, Long userId) {
+        if(!studyGroupMapper.isAdmin(groupId, userId)){
+            return "You do not have permission to approve this group.";
+        }
+
+        studyGroupMapper.approveRequest(groupId, requestId);
+
+        Long requestUserId = studyGroupMapper.getRequestUserId(requestId);
+
+        studyGroupMapper.addMember(groupId, requestUserId);
+        studyGroupMapper.incrementMemberCount(groupId);
+
+        return "Request approved.";
+    }
+
+    public String rejectRequest(Long groupId, Long requestId, Long userId) {
+        if(!studyGroupMapper.isAdmin(groupId, userId)){
+            return "You do not have permission to reject this group.";
+        }
+
+        studyGroupMapper.rejectRequest(groupId, requestId);
+        return "Request rejected.";
     }
 }
