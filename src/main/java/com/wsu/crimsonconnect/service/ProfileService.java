@@ -16,6 +16,17 @@ public class ProfileService {
         return profileMapper.getProfile(userId);
     }
 
+    public void createProfile(int userId, ProfileUpdateRequest profileUpdateRequest){
+        Profile profile = Profile.builder()
+                .userId(userId)
+                .nickname(profileUpdateRequest.getNickname())
+                .bio(profileUpdateRequest.getBio())
+                .profileImageUrl(profileUpdateRequest.getProfileImageUrl())
+                .build();
+
+        profileMapper.createProfile(profile);
+    }
+
     public void updateProfile(int userId, ProfileUpdateRequest profileUpdateRequest) {
         Profile profile = Profile.builder()
                 .userId(userId)

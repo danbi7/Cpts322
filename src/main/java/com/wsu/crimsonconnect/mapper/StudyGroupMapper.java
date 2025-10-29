@@ -79,4 +79,31 @@ public interface StudyGroupMapper {
         GROUP BY g.group_id
     """)
     StudyGroup getStudyGroupById(@Param("groupId") int groupId, @Param("userId") int userId);
+    @Insert("""
+        INSERT INTO study_groups 
+        (name, description, full_description, tags, max_members, is_private, created_by)
+        VALUES (#{name}, #{description}, #{fullDescription},   #{tags, typeHandler=com.wsu.crimsonconnect.config.JsonTypeHandler},
+                #{maxMembers}, #{isPrivate}, #{createdBy})
+    """)
+    @Options(useGeneratedKeys = true, keyProperty = "groupId")
+    int createStudyGroup(StudyGroup group);
+
+    @Update("""
+        UPDATE study_groups
+        SET name=#{name},
+            description=#{description},
+            full_description=#{fullDescription},
+            tags=#{tags, typeHandler=com.wsu.crimsonconnect.config.JsonTypeHandler},
+            max_members=#{maxMembers},
+            is_private=#{isPrivate}
+        WHERE group_id=#{groupId} AND created_by=#{createdBy}
+    """)
+    int updateStudyGroup(StudyGroup group);
+
+    @Delete("""
+        DELETE FROM study_groups
+        WHERE group_id=#{groupId} AND created_by=#{createdBy}
+    """)
+    int deleteStudyGroup(@Param("groupId") Long groupId, @Param("createdBy") Long createdBy);
+
 }

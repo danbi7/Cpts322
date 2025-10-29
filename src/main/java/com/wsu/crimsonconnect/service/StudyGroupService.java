@@ -1,4 +1,5 @@
 package com.wsu.crimsonconnect.service;
+import com.wsu.crimsonconnect.dto.StudyGroupRequest;
 
 import com.wsu.crimsonconnect.domain.StudyGroup;
 import com.wsu.crimsonconnect.dto.StudyGroupListResponse;
@@ -54,5 +55,37 @@ public class StudyGroupService {
                 .hasPendingRequest(group.isHasPendingRequest())
                 .createdAt(group.getCreatedAt())
                 .build();
+    }
+    public Long createStudyGroup(StudyGroupRequest request, Long userId) {
+        StudyGroup group = StudyGroup.builder()
+                .name(request.getName())
+                .description(request.getDescription())
+                .fullDescription(request.getFullDescription())
+                .tags(request.getTags())
+                .maxMembers(request.getMaxMembers())
+                .isPrivate(request.isPrivate())
+                .createdAt(java.time.LocalDateTime.now())
+                .build();
+
+        studyGroupMapper.createStudyGroup(group);
+        return group.getGroupId();
+    }
+
+    public void updateStudyGroup(Long groupId, StudyGroupRequest request, Long userId) {
+        StudyGroup group = StudyGroup.builder()
+                .groupId(groupId)
+                .name(request.getName())
+                .description(request.getDescription())
+                .fullDescription(request.getFullDescription())
+                .tags(request.getTags())
+                .maxMembers(request.getMaxMembers())
+                .isPrivate(request.isPrivate())
+                .build();
+
+        studyGroupMapper.updateStudyGroup(group);
+    }
+
+    public void deleteStudyGroup(Long groupId, Long userId) {
+        studyGroupMapper.deleteStudyGroup(groupId, userId);
     }
 }
