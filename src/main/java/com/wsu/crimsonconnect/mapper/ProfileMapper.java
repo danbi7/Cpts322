@@ -2,10 +2,7 @@ package com.wsu.crimsonconnect.mapper;
 
 import com.wsu.crimsonconnect.domain.Profile;
 import com.wsu.crimsonconnect.dto.ProfileResponse;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 @Mapper
 public interface ProfileMapper {
@@ -24,6 +21,25 @@ public interface ProfileMapper {
         WHERE u.user_id = #{userId}
     """)
     ProfileResponse getProfile(int userId);
+
+    @Insert("""
+        INSERT INTO user_profile (
+            user_id,
+            nickname,
+            bio,
+            profile_image_url,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{userId},
+            #{nickname},
+            #{bio},
+            #{profileImageUrl},
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+    """)
+    int createProfile(Profile profile);
 
     @Update("""
         UPDATE user_profile 
