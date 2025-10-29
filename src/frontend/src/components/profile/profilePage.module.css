@@ -1,18 +1,29 @@
 /* Main Container */
 .profilePage {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   background: #f9fafb;
-  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 /* Header */
 .header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f9fafb;
+  padding: 1rem 2rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
+  z-index: 10;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .backButton {
@@ -40,10 +51,14 @@
 
 /* Profile Card */
 .profileCard {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  background: transparent;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  flex: 1;
 }
 
 /* Profile Header */
@@ -54,6 +69,8 @@
   display: flex;
   align-items: center;
   gap: 2rem;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .profileImageContainer {
@@ -193,12 +210,17 @@
 /* Profile Details */
 .profileDetails {
   padding: 2rem;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  background: transparent;
 }
 
 .detailsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex;
   gap: 2rem;
+  height: 100%;
+  min-height: 0;
 }
 
 .detailSection {
@@ -206,6 +228,9 @@
   padding: 1.5rem;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .sectionTitle {
@@ -275,27 +300,64 @@
   outline: 2px solid rgba(185, 28, 28, 0.1);
 }
 
-/* Stats Section */
-.statsSection {
-  padding: 2rem;
-  background: #f9fafb;
+.logoutSection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
   border-top: 1px solid #e5e7eb;
 }
 
+.logoutButton {
+  background: linear-gradient(to bottom right, #DC2626 0%, #B91C1C 100%);
+  box-shadow: 
+    0 4px 15px rgba(220, 38, 38, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 0.5rem;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.logoutButton:hover {
+  background: linear-gradient(to bottom right, #B91C1C 0%, #991B1B 100%);
+  box-shadow: 
+    0 6px 20px rgba(220, 38, 38, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.logoutButton:active {
+  transform: translateY(0);
+}
+
+/* Stats Section */
+.statsSection {
+  padding: 2rem;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  margin: 0;
+  flex-shrink: 0;
+}
+
 .statsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 .statItem {
   text-align: center;
-  padding: 1.5rem;
+  padding: 0.75rem;
   background: white;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   transition: transform 0.2s;
+  flex: 1;
 }
 
 .statItem:hover {
@@ -304,10 +366,10 @@
 }
 
 .statNumber {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   color: #b91c1c;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .statLabel {
@@ -360,15 +422,31 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .detailsGrid {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .detailSection {
+    max-height: 180px;
+  }
+}
+
 @media (max-width: 768px) {
-  .profilePage {
-    padding: 1rem;
+  .header {
+    padding: 0.5rem 1rem;
   }
 
   .profileHeader {
     flex-direction: column;
     text-align: center;
-    gap: 1rem;
+    gap: 0.75rem;
+    padding: 1rem;
   }
 
   .profileImageContainer {
@@ -384,16 +462,25 @@
   }
 
   .profileName {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 
   .detailsGrid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .detailSection {
+    max-height: 120px;
   }
 
   .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
+    flex-wrap: wrap;
+  }
+  
+  .statItem {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 120px;
   }
 
   .editActions {
@@ -408,45 +495,45 @@
 }
 
 @media (max-width: 480px) {
-  .profilePage {
-    padding: 0.5rem;
+  .header {
+    padding: 0.5rem 0.75rem;
   }
 
   .profileHeader {
-    padding: 1.5rem;
+    padding: 0.75rem;
   }
 
   .profileImage,
   .profileImagePlaceholder {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
   }
 
   .profileImagePlaceholder {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
 
   .profileName {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 
   .profileDetails {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .statsSection {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .statsGrid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .statItem {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .statNumber {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 }

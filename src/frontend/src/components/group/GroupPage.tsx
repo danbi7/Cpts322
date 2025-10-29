@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import NavigationBar from '../NavigationBar';
 import styles from './groupPage.module.css';
 
 interface Post {
@@ -220,8 +221,13 @@ const GroupPage: React.FC = () => {
 
   return (
     <div className={styles.groupPage}>
-      {/* Header */}
-      <div className={styles.header}>
+      {/* Navigation Bar */}
+      <NavigationBar />
+      
+      {/* Main Content */}
+      <div className={styles.mainContent}>
+        {/* Header */}
+        <div className={styles.header}>
         <div className={styles.headerContent}>
           <h1 className={styles.groupTitle}>{groupInfo.name}</h1>
           <p className={styles.groupDescription}>{groupInfo.description}</p>
@@ -346,6 +352,7 @@ const GroupPage: React.FC = () => {
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

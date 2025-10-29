@@ -1,12 +1,18 @@
 .loginPage {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   background: #FFFFFF;
+}
+
+:global(body.login-active) {
+  overflow: hidden;
+  height: 100vh;
 }
 
 .loginContainer {

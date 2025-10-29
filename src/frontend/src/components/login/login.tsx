@@ -13,7 +13,13 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
   
-  // Redirect if already authenticated
+  React.useEffect(() => {
+    document.body.classList.add('login-active');
+    return () => {
+      document.body.classList.remove('login-active');
+    };
+  }, []);
+  
   React.useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
