@@ -18,7 +18,6 @@ public interface StudyGroupMapper {
         g.member_count AS memberCount,
         g.max_members AS maxMembers,
         g.is_private AS isPrivate,
-        COUNT(m.user_id) AS memberCount,
         EXISTS (
             SELECT 1 FROM study_group_members 
             WHERE user_id = #{userId} AND group_id = g.group_id
@@ -31,10 +30,8 @@ public interface StudyGroupMapper {
         ) AS hasPendingRequest,
         g.created_at AS createdAt
     FROM study_groups g
-    LEFT JOIN study_group_members m ON g.group_id = m.group_id
     WHERE 
         (#{search} IS NULL OR g.name LIKE CONCAT('%', #{search}, '%') OR g.description LIKE CONCAT('%', #{search}, '%'))
-    GROUP BY g.group_id
     ORDER BY g.created_at DESC
     LIMIT #{limit} OFFSET #{offset}
     """)
@@ -54,8 +51,8 @@ public interface StudyGroupMapper {
     List<StudyGroup> getStudyGroups(
             @Param("userId") Long userId,
             @Param("search") String search,
-            @Param("offset") int offset,
-            @Param("limit") int limit
+            @Param("limit") int limit,
+            @Param("offset") int offset
     );
 
     @Select("""
@@ -76,7 +73,6 @@ public interface StudyGroupMapper {
         g.member_count AS memberCount,
         g.max_members AS maxMembers,
         g.is_private AS isPrivate,
-        COUNT(m.user_id) AS memberCount,
         EXISTS (
             SELECT 1 FROM study_group_members 
             WHERE user_id = #{userId} AND group_id = g.group_id
@@ -89,9 +85,7 @@ public interface StudyGroupMapper {
         ) AS hasPendingRequest,
         g.created_at AS createdAt
     FROM study_groups g
-    LEFT JOIN study_group_members m ON g.group_id = m.group_id
     WHERE g.group_id = #{groupId}
-    GROUP BY g.group_id
     """)
     @ResultMap("StudyGroupResultMap")
     StudyGroup getStudyGroupById(@Param("groupId") Long groupId, @Param("userId") Long userId);
