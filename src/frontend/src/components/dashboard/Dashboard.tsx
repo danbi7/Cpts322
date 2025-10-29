@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import NavigationBar from '../NavigationBar';
 import styles from './dashboard.module.css';
 
@@ -24,7 +23,7 @@ interface JoinButtonState {
   variant: 'success' | 'disabled' | 'pending' | 'private' | 'public';
 }
 
-// Mock Data - Easy to replace with API calls later
+// Sample Data - Replace with actual API calls
 const MOCK_GROUPS: StudyGroup[] = [
   {
     id: 1,
@@ -184,18 +183,15 @@ const MOCK_GROUPS: StudyGroup[] = [
   },
 ];
 
-const MOCK_USERNAME = "JohnDoe"; // Replace with actual user data from API
-
 type FilterType = 'popular' | 'newest' | 'myGroup' | 'calendar';
 type CategoryType = 'all' | 'cs' | 'math' | 'science' | 'humanities';
 
 const Dashboard: React.FC = () => {
-  const { logout, isAuthenticated } = useAuth();
   
   // Filter and search state
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('popular');
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory] = useState<CategoryType>('all');
+  const [searchQuery] = useState('');
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -311,7 +307,7 @@ const Dashboard: React.FC = () => {
     setMessageType('');
 
     try {
-      // Mock action - replace with actual API call
+      // TODO: Implement actual API call
       // await groupAPI.joinGroup(group.id);
       // setMessage(`Successfully ${buttonState.text.toLowerCase()} for ${group.name}`);
       // setMessageType('success');
@@ -365,6 +361,15 @@ const Dashboard: React.FC = () => {
             className={`${styles.filterButton} ${selectedFilter === 'calendar' ? styles.gray : styles.gray}`}
           >
             Calendar
+          </button>
+          <button
+            onClick={() => window.location.href = '/create-group'}
+            className={styles.createGroupButton}
+          >
+            <svg className={styles.plusIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Create New Group
           </button>
         </div>
 

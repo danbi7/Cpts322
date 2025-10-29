@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { profileAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import styles from './profileCreation.module.css';
 
 interface ProfileFormData {
@@ -9,6 +10,7 @@ interface ProfileFormData {
 }
 
 const ProfileCreation: React.FC = () => {
+  const { refreshProfile } = useAuth();
   const [formData, setFormData] = useState<ProfileFormData>({
     nickname: '',
     bio: '',
@@ -46,6 +48,9 @@ const ProfileCreation: React.FC = () => {
         bio: formData.bio,
         profileImageUrl: formData.profileImageUrl
       });
+
+      // Refresh the profile in AuthContext for NavigationBar
+      await refreshProfile();
 
       setMessage('Profile created successfully!');
       setMessageType('success');

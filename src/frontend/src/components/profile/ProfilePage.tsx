@@ -5,7 +5,7 @@ import { profileAPI, ProfileResponse } from '../../services/api';
 import styles from './profilePage.module.css';
 
 const ProfilePage: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, refreshProfile } = useAuth();
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -79,6 +79,8 @@ const ProfilePage: React.FC = () => {
       // Refresh profile data from API
       const updatedProfile = await profileAPI.getProfile();
       setProfile(updatedProfile);
+      
+      await refreshProfile();
       
       setIsEditing(false);
       setMessage('Profile updated successfully!');

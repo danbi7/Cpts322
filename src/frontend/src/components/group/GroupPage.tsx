@@ -220,10 +220,9 @@ const GroupPage: React.FC = () => {
 
 
   return (
+    <div>
+    <NavigationBar />
     <div className={styles.groupPage}>
-      {/* Navigation Bar */}
-      <NavigationBar />
-      
       {/* Main Content */}
       <div className={styles.mainContent}>
         {/* Header */}
@@ -354,6 +353,7 @@ const GroupPage: React.FC = () => {
         ))}
       </div>
       </div>
+    </div>
     </div>
   );
 };

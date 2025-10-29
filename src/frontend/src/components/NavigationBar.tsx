@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './NavigationBar.module.css';
 
 interface NavigationBarProps {
@@ -9,6 +10,7 @@ interface NavigationBarProps {
 const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userProfile } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -20,6 +22,10 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
   return (
@@ -87,13 +93,17 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
             className={styles.profilePictureButton}
           >
             <div className={styles.profilePicture}>
-              <svg 
-                className={styles.profileIcon}
-                fill="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
+              {userProfile?.profileImageUrl ? (
+                <img 
+                  src={userProfile.profileImageUrl} 
+                  alt="Profile" 
+                  className={styles.profileImage}
+                />
+              ) : (
+                <div className={styles.profileImagePlaceholder}>
+                  {userProfile ? getInitials(userProfile.firstName, userProfile.lastName) : 'U'}
+                </div>
+              )}
             </div>
           </button>
         </div>

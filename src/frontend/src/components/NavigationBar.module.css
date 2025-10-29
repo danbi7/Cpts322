@@ -180,6 +180,24 @@
   color: white;
 }
 
+.profileImage {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profileImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .searchSection {
@@ -250,5 +268,9 @@
   .profileIcon {
     width: 1.25rem;
     height: 1.25rem;
+  }
+
+  .profileImagePlaceholder {
+    font-size: 0.75rem;
   }
 }

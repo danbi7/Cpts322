@@ -197,6 +197,31 @@
   color: #b91c1c;
 }
 
+.createGroupButton {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background: #dc2626;
+  color: white;
+  border: 1px solid #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.createGroupButton:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.plusIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
 /* Study Groups Grid */
 .groupsGrid {
   display: grid;
