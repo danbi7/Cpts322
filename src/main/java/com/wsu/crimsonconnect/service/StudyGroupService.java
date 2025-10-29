@@ -103,4 +103,34 @@ public class StudyGroupService {
     public void deleteStudyGroup(Long groupId, Long userId) {
         studyGroupMapper.deleteStudyGroup(groupId, userId);
     }
+
+    public String joinStudyGroup(Long groupId, Long userId) {
+        boolean alreadyMember = studyGroupMapper.isUserInGroup(groupId, userId);
+
+        if(alreadyMember){
+            return "Already a member of this group.";
+        }
+
+        boolean isPrivate = studyGroupMapper.isGroupPrivate(groupId);
+
+        if(isPrivate){
+            boolean alreadyRequested = studyGroupMapper.hasPendingRequest(groupId, userId);
+            if(alreadyRequested){
+                return "Join request already pending.";
+            }
+
+            studyGroupMapper.createJoinRequest(groupId, userId);
+            return "Join request submitted (pending approval).";
+        }else{
+            int memberCount = studyGroupMapper.getMemberCount(groupId);
+            int maxMembers = studyGroupMapper.getMaxMembers(groupId);
+            if(memberCount >= maxMembers){
+                return "Group is full.";
+            }
+
+            studyGroupMapper.addMember(groupId, userId);
+            studyGroupMapper.incrementMemberCount(groupId);
+            return "Joined study group successfully.";
+        }
+    }
 }

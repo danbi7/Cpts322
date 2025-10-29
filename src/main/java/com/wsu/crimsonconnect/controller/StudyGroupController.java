@@ -56,4 +56,8 @@ public class StudyGroupController {
         return "Group deleted successfully";
     }
 
+    @PostMapping("/{groupId}/join")
+    public String joinStudyGroup(@PathVariable Long groupId, @RequestParam Long userId) {
+        return studyGroupService.joinStudyGroup(groupId, userId);
+    }
 }
