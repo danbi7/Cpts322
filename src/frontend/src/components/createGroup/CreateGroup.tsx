@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavigationBar from '../NavigationBar';
+import { studyGroupAPI, StudyGroupRequest } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import styles from './createGroup.module.css';
 
 interface FormData {
@@ -22,17 +24,9 @@ interface FormErrors {
   category?: string;
 }
 
-interface StudyGroupRequest {
-  name: string;
-  description: string;
-  fullDescription: string;
-  tags: string[];
-  maxMembers: number;
-  isPrivate: boolean;
-}
-
 const CreateGroup: React.FC = () => {
   const navigate = useNavigate();
+  const { userId } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
@@ -133,18 +127,34 @@ const CreateGroup: React.FC = () => {
         isPrivate: formData.isPrivate
       };
       
-      // TODO: Replace with actual API call
-      // await createStudyGroup(studyGroupRequest);
-      
       if (action === 'create') {
+        // Call the actual API
+        const createdGroup = await studyGroupAPI.createStudyGroup(studyGroupRequest, userId!);
+        console.log('Group created successfully:', createdGroup);
+        
         // Redirect to dashboard or group page
         navigate('/dashboard');
       } else {
         // TODO: Implement draft save functionality
-        // await saveDraft(studyGroupRequest);
+        console.log('Draft save not implemented yet');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating group:', error);
+      
+      // Enhanced error handling
+      let errorMessage = 'Failed to create group. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'You must be logged in to create a group.';
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Please check your input and try again.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   userProfile: ProfileResponse | null;
   refreshProfile: () => Promise<void>;
+  userId: number | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,11 +29,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<ProfileResponse | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
 
   const fetchUserProfile = async () => {
     try {
       const profile = await profileAPI.getProfile();
       setUserProfile(profile);
+      // Extract userId from JWT token
+      const token = tokenManager.getToken();
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const userId = payload.userId;
+          if (userId) {
+            setUserId(parseInt(userId.toString(), 10));
+          }
+        } catch (error) {
+          console.error('Failed to decode token:', error);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
       setUserProfile(null);
@@ -59,6 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     tokenManager.removeToken();
     setIsAuthenticated(false);
     setUserProfile(null);
+    setUserId(null);
   };
 
   const refreshProfile = async () => {
@@ -74,6 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     userProfile,
     refreshProfile,
+    userId,
   };
 
   return (

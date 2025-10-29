@@ -69,11 +69,33 @@ const ProfilePage: React.FC = () => {
     setSaving(true);
     setMessage('');
     
+    // Enhanced validation
+    if (!editForm.bio.trim()) {
+      setMessage('Bio is required.');
+      setMessageType('error');
+      setSaving(false);
+      return;
+    }
+
+    if (editForm.bio.trim().length < 10) {
+      setMessage('Bio must be at least 10 characters long.');
+      setMessageType('error');
+      setSaving(false);
+      return;
+    }
+
+    if (editForm.profileImageUrl && !isValidUrl(editForm.profileImageUrl)) {
+      setMessage('Please enter a valid URL for your profile image.');
+      setMessageType('error');
+      setSaving(false);
+      return;
+    }
+    
     try {
       await profileAPI.updateProfile({
-        nickname: editForm.nickname,
-        bio: editForm.bio,
-        profileImageUrl: editForm.profileImageUrl
+        nickname: editForm.nickname.trim(),
+        bio: editForm.bio.trim(),
+        profileImageUrl: editForm.profileImageUrl.trim()
       });
       
       // Refresh profile data from API
@@ -85,12 +107,25 @@ const ProfilePage: React.FC = () => {
       setIsEditing(false);
       setMessage('Profile updated successfully!');
       setMessageType('success');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update profile:', error);
-      setMessage('Failed to update profile. Please try again.');
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to update profile. Please try again.';
+      setMessage(errorMessage);
       setMessageType('error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Helper function to validate URL
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
   };
 
@@ -106,11 +141,15 @@ const ProfilePage: React.FC = () => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  const formatDate = (date: Date | null | undefined) => {
-    if (!date) {
+  const formatDate = (value: Date | string | number | null | undefined) => {
+    if (!value) {
       return 'Not available';
     }
-    return date.toLocaleDateString('en-US', {
+    const parsed = value instanceof Date ? value : new Date(value);
+    if (isNaN(parsed.getTime())) {
+      return 'Not available';
+    }
+    return parsed.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -131,9 +170,24 @@ const ProfilePage: React.FC = () => {
   if (!profile) {
     return (
       <div className={styles.profilePage}>
+        <NavigationBar />
         <div className={styles.errorContainer}>
           <h2>Profile not found</h2>
-          <p>Unable to load your profile information.</p>
+          <p>It looks like you haven't created your profile yet.</p>
+          <div className={styles.actionButtons}>
+            <button 
+              className={styles.createProfileButton}
+              onClick={() => window.location.href = '/profile-creation'}
+            >
+              Create Profile
+            </button>
+            <button 
+              className={styles.retryButton}
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -144,178 +198,160 @@ const ProfilePage: React.FC = () => {
       {/* Navigation Bar */}
       <NavigationBar />
       
-      {/* Main Content */}
-      <div className={styles.mainContent}>
-      {/* Profile Card */}
-      <div className={styles.profileCard}>
-        {/* Profile Header */}
-        <div className={styles.profileHeader}>
-          <div className={styles.profileImageContainer}>
-            {profile.profileImageUrl ? (
-              <img 
-                src={profile.profileImageUrl} 
-                alt="Profile" 
-                className={styles.profileImage}
-              />
-            ) : (
-              <div className={styles.profileImagePlaceholder}>
-                {getInitials(profile.firstName, profile.lastName)}
-              </div>
-            )}
-          </div>
-          
-          <div className={styles.profileInfo}>
-            <h2 className={styles.profileName}>
-              {profile.firstName} {profile.lastName}
-            </h2>
-            <p className={styles.profileUsername}>@{profile.username}</p>
-            {profile.nickname && (
-              <p className={styles.profileNickname}>"{profile.nickname}"</p>
-            )}
-          </div>
-
-          <div className={styles.profileActions}>
-            {!isEditing ? (
-              <button className={styles.editButton} onClick={handleEdit}>
-                Edit Profile
-              </button>
-            ) : (
-              <div className={styles.editActions}>
-                <button 
-                  className={styles.cancelButton} 
-                  onClick={handleCancel}
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-                <button 
-                  className={styles.saveButton} 
-                  onClick={handleSave}
-                  disabled={saving}
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Message Display */}
-        {message && (
-          <div className={`${styles.message} ${styles[`message${messageType.charAt(0).toUpperCase() + messageType.slice(1)}`]}`}>
-            {message}
-          </div>
-        )}
-
-        {/* Profile Details */}
-        <div className={styles.profileDetails}>
-          <div className={styles.detailsGrid}>
-            {/* Basic Information */}
-            <div className={styles.detailSection}>
-              <h3 className={styles.sectionTitle}>Basic Information</h3>
-              <div className={styles.detailItem}>
-                <label className={styles.detailLabel}>First Name</label>
-                <span className={styles.detailValue}>{profile.firstName}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label className={styles.detailLabel}>Last Name</label>
-                <span className={styles.detailValue}>{profile.lastName}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label className={styles.detailLabel}>Email</label>
-                <span className={styles.detailValue}>{profile.email}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label className={styles.detailLabel}>Username</label>
-                <span className={styles.detailValue}>@{profile.username}</span>
-              </div>
-            </div>
-
-            {/* Editable Information */}
-            <div className={styles.detailSection}>
-              <h3 className={styles.sectionTitle}>Personal Details</h3>
-              
-              <div className={styles.detailItem}>
-                <label className={styles.detailLabel}>Nickname</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="nickname"
-                    value={editForm.nickname}
-                    onChange={handleInputChange}
-                    className={styles.editInput}
-                    placeholder="Enter nickname"
-                  />
-                ) : (
-                  <span className={styles.detailValue}>
-                    {profile.nickname || 'Not set'}
-                  </span>
-                )}
-              </div>
-
-              <div className={styles.detailItem}>
-                <label className={styles.detailLabel}>Bio</label>
-                {isEditing ? (
-                  <textarea
-                    name="bio"
-                    value={editForm.bio}
-                    onChange={handleInputChange}
-                    className={styles.editTextarea}
-                    placeholder="Tell us about yourself..."
-                    rows={4}
-                  />
-                ) : (
-                  <span className={styles.detailValue}>
-                    {profile.bio || 'No bio provided'}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Account Information */}
-            <div className={styles.detailSection}>
-              <h3 className={styles.sectionTitle}>Account Information</h3>
-              <div className={styles.detailItem}>
-                <label className={styles.detailLabel}>Member Since</label>
-                <span className={styles.detailValue}>
-                  {formatDate(profile.createdAt)}
-                </span>
-              </div>
-              <div className={styles.logoutSection}>
-                <button 
-                  onClick={logout}
-                  className={styles.logoutButton}
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className={styles.statsSection}>
-          <h3 className={styles.sectionTitle}>Activity Stats</h3>
-          <div className={styles.statsGrid}>
-            <div className={styles.statItem}>
-              <div className={styles.statNumber}>12</div>
-              <div className={styles.statLabel}>Study Groups</div>
-            </div>
-            <div className={styles.statItem}>
-              <div className={styles.statNumber}>45</div>
-              <div className={styles.statLabel}>Posts</div>
-            </div>
-            <div className={styles.statItem}>
-              <div className={styles.statNumber}>128</div>
-              <div className={styles.statLabel}>Comments</div>
-            </div>
-            <div className={styles.statItem}>
-              <div className={styles.statNumber}>89</div>
-              <div className={styles.statLabel}>Upvotes</div>
-            </div>
+      {/* Header Banner */}
+      <div className={styles.headerBanner}>
+        <div className={styles.headerContent}>
+          <div className={styles.headerText}>
+            <h1 className={styles.headerTitle}>My Profile</h1>
+            <p className={styles.headerSubtitle}>Manage your personal information and preferences</p>
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className={styles.mainContent}>
+        <div className={styles.contentGrid}>
+          {/* Profile Info Column */}
+          <div className={styles.profileInfoColumn}>
+            <h2 className={styles.sectionTitle}>Profile Information</h2>
+            
+            {/* Profile Image Section */}
+            <div className={styles.profileImageSection}>
+              <div className={styles.profileImageContainer}>
+                {profile.profileImageUrl ? (
+                  <img 
+                    src={profile.profileImageUrl} 
+                    alt="Profile" 
+                    className={styles.profileImage}
+                  />
+                ) : (
+                  <div className={styles.profileImagePlaceholder}>
+                    {getInitials(profile.firstName, profile.lastName)}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Message Display */}
+            {message && (
+              <div className={`${styles.message} ${styles[`message${messageType.charAt(0).toUpperCase() + messageType.slice(1)}`]}`}>
+                {message}
+              </div>
+            )}
+
+            {/* Editable Fields */}
+            <div className={styles.formField}>
+              <label className={styles.formLabel}>Nickname</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="nickname"
+                  value={editForm.nickname}
+                  onChange={handleInputChange}
+                  className={styles.formInput}
+                  placeholder="Enter your nickname"
+                />
+              ) : (
+                <div className={styles.formInput}>
+                  {profile.nickname || 'No nickname set'}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.formField}>
+              <label className={styles.formLabel}>Bio</label>
+              {isEditing ? (
+                <textarea
+                  name="bio"
+                  value={editForm.bio}
+                  onChange={handleInputChange}
+                  className={styles.formTextarea}
+                  placeholder="Tell us about yourself..."
+                />
+              ) : (
+                <div className={styles.formTextarea}>
+                  {profile.bio || 'No bio available'}
+                </div>
+              )}
+            </div>
+
+            {isEditing && (
+              <div className={styles.formField}>
+                <label className={styles.formLabel}>Profile Image URL</label>
+                <input
+                  type="url"
+                  name="profileImageUrl"
+                  value={editForm.profileImageUrl}
+                  onChange={handleInputChange}
+                  className={styles.formInput}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className={styles.actionButtons}>
+              {!isEditing ? (
+                <button className={styles.primaryButton} onClick={handleEdit}>
+                  Edit Profile
+                </button>
+              ) : (
+                <>
+                  <button 
+                    className={styles.secondaryButton} 
+                    onClick={handleCancel}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className={styles.primaryButton} 
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Logout Button */}
+            <button 
+              className={styles.logoutButton} 
+              onClick={() => {
+                logout();
+                window.location.href = '/login';
+              }}
+            >
+              Logout
+            </button>
+          </div>
+
+          {/* Profile Details Column */}
+          <div className={styles.profileDetailsColumn}>
+            <h2 className={styles.sectionTitle}>Account Details</h2>
+            
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Full Name</span>
+              <span className={styles.detailValue}>{profile.firstName} {profile.lastName}</span>
+            </div>
+            
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Username</span>
+              <span className={styles.detailValue}>@{profile.username}</span>
+            </div>
+            
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Email</span>
+              <span className={styles.detailValue}>{profile.email}</span>
+            </div>
+            
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Member Since</span>
+              <span className={styles.detailValue}>{formatDate(profile.createdAt)}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

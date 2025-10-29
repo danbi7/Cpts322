@@ -19,6 +19,7 @@ const ProfileCreation: React.FC = () => {
 
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -33,26 +34,42 @@ const ProfileCreation: React.FC = () => {
     e.preventDefault();
     setMessage('');
     setMessageType('');
+    setIsSubmitting(true);
 
-    // Basic validation
+    // Enhanced validation
     if (!formData.bio.trim()) {
       setMessage('Please fill in your bio.');
       setMessageType('error');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.bio.trim().length < 10) {
+      setMessage('Bio must be at least 10 characters long.');
+      setMessageType('error');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.profileImageUrl && !isValidUrl(formData.profileImageUrl)) {
+      setMessage('Please enter a valid URL for your profile image.');
+      setMessageType('error');
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      // Update profile with all supported fields
-      await profileAPI.updateProfile({
-        nickname: formData.nickname,
-        bio: formData.bio,
-        profileImageUrl: formData.profileImageUrl
+      // Create profile with all supported fields
+      const response = await profileAPI.createProfile({
+        nickname: formData.nickname.trim(),
+        bio: formData.bio.trim(),
+        profileImageUrl: formData.profileImageUrl.trim()
       });
 
       // Refresh the profile in AuthContext for NavigationBar
       await refreshProfile();
 
-      setMessage('Profile created successfully!');
+      setMessage(`Profile created successfully! ${response}`);
       setMessageType('success');
       
       // Reset form after success
@@ -64,12 +81,27 @@ const ProfileCreation: React.FC = () => {
         });
         setMessage('');
         setMessageType('');
-      }, 2000);
+      }, 3000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create profile:', error);
-      setMessage('Failed to create profile. Please try again.');
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to create profile. Please try again.';
+      setMessage(errorMessage);
       setMessageType('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Helper function to validate URL
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
   };
 
@@ -140,8 +172,9 @@ const ProfileCreation: React.FC = () => {
           <button 
             type="submit" 
             className={styles.createButton}
+            disabled={isSubmitting}
           >
-            Create Profile
+            {isSubmitting ? 'Creating Profile...' : 'Create Profile'}
           </button>
         </form>
       </div>

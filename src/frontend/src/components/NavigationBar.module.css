@@ -11,7 +11,7 @@
 .navbarContent {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -22,7 +22,7 @@
 .leftSection {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .logo {
@@ -32,29 +32,25 @@
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.2s;
   padding: 0;
 }
 
-.logo:hover {
-  color: #b91c1c;
-}
 
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .navLink {
   background: none;
   border: none;
-  color: #374151;
-  font-size: 1rem;
+  color: #6b7280;
+  font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s;
   padding: 0.5rem 0;
+  text-decoration: none;
 }
 
 .navLink:hover {
@@ -63,6 +59,7 @@
 
 .navLink.active {
   color: #dc2626;
+  font-weight: 600;
 }
 
 /* Search Bar */
@@ -70,6 +67,7 @@
   flex: 1;
   max-width: 400px;
   margin: 0 2rem;
+  padding-left: 350px;
 }
 
 .searchWrapper {
@@ -79,20 +77,20 @@
 
 .searchInput {
   width: 100%;
-  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   background: #f9fafb;
   outline: none;
-  font-size: 0.875rem;
-  transition: all 0.2s;
+  font-size: 0.9rem;
+  color: #374151;
 }
 
 .searchInput:focus {
-  outline: 2px solid #dc2626;
-  outline-offset: 2px;
-  border-color: transparent;
+  outline: none;
+  border-color: #dc2626;
   background: white;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .searchIcon {
