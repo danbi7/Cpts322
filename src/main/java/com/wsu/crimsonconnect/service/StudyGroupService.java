@@ -5,16 +5,18 @@ import com.wsu.crimsonconnect.domain.StudyGroup;
 import com.wsu.crimsonconnect.dto.StudyGroupListResponse;
 import com.wsu.crimsonconnect.dto.StudyGroupResponse;
 import com.wsu.crimsonconnect.mapper.StudyGroupMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class StudyGroupService {
-    private StudyGroupMapper studyGroupMapper;
+    private final StudyGroupMapper studyGroupMapper;
 
-    public StudyGroupListResponse getStudyGroups(int userId, String search, int page, int size) {
+    public StudyGroupListResponse getStudyGroups(Long userId, String search, int page, int size) {
         int offset = (page - 1) * size;
         List<StudyGroup> groups = studyGroupMapper.getStudyGroups(userId, search, offset, size);
         int totalItems = studyGroupMapper.countStudyGroups(search);
@@ -36,7 +38,7 @@ public class StudyGroupService {
                 .build();
     }
 
-    public StudyGroupResponse getStudyGroupById(int groupId, int userId) {
+    public StudyGroupResponse getStudyGroupById(Long groupId, Long userId) {
         StudyGroup group = studyGroupMapper.getStudyGroupById(groupId, userId);
         return toResponse(group);
     }
@@ -67,7 +69,7 @@ public class StudyGroupService {
                 .createdAt(java.time.LocalDateTime.now())
                 .build();
 
-        studyGroupMapper.createStudyGroup(group);
+        studyGroupMapper.createStudyGroup(group, userId);
         return group.getGroupId();
     }
 
@@ -82,7 +84,7 @@ public class StudyGroupService {
                 .isPrivate(request.isPrivate())
                 .build();
 
-        studyGroupMapper.updateStudyGroup(group);
+        studyGroupMapper.updateStudyGroup(group, userId);
     }
 
     public void deleteStudyGroup(Long groupId, Long userId) {
