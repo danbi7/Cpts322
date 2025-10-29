@@ -18,6 +18,12 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.getProfile(userId));
     }
 
+    @PostMapping
+    public ResponseEntity<String> createProfile(@RequestBody ProfileUpdateRequest request, @RequestAttribute("userId") int userId) {
+        profileService.createProfile(userId, request);
+        return ResponseEntity.ok("Profile created");
+    }
+
     @PutMapping
     public ResponseEntity<String> updateProfile(@RequestBody ProfileUpdateRequest request, @RequestAttribute("userId") int userId) {
         profileService.updateProfile(userId, request);
