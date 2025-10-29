@@ -16,9 +16,22 @@ import java.util.stream.Collectors;
 public class StudyGroupService {
     private final StudyGroupMapper studyGroupMapper;
 
-    public StudyGroupListResponse getStudyGroups(Long userId, String search, int page, int size) {
+    public StudyGroupListResponse getStudyGroups(Long userId, String search, int page, int size, String filter) {
         int offset = (page - 1) * size;
-        List<StudyGroup> groups = studyGroupMapper.getStudyGroups(userId, search, size, offset);
+        String orderBy;
+
+        switch (filter) {
+            case "popular":
+                orderBy = "member_count DESC";
+                break;
+            case "mygroup":
+                orderBy = "is_member DESC, created_at DESC";
+                break;
+            default:
+                orderBy = "created_at DESC";
+        }
+
+        List<StudyGroup> groups = studyGroupMapper.getStudyGroups(userId, search, size, offset, orderBy);
         int totalItems = studyGroupMapper.countStudyGroups(search);
 
         List<StudyGroupResponse> groupResponses = groups.stream()
