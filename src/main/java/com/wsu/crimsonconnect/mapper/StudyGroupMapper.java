@@ -2,6 +2,7 @@ package com.wsu.crimsonconnect.mapper;
 
 import com.wsu.crimsonconnect.domain.StudyGroup;
 import org.apache.ibatis.annotations.*;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
 
@@ -118,4 +119,83 @@ public interface StudyGroupMapper {
     """)
     int deleteStudyGroup(@Param("groupId") Long groupId, @Param("userId") Long userId);
 
+    @Select("SELECT is_private FROM study_groups WHERE group_id = #{groupId}")
+    boolean isGroupPrivate(@Param("groupId") Long groupId);
+
+    @Select("SELECT COUNT(*) FROM study_group_members WHERE group_id = #{groupId}")
+    int getMemberCount(@Param("groupId") Long groupId);
+
+    @Select("SELECT max_members FROM study_groups WHERE group_id = #{groupId}")
+    int getMaxMembers(@Param("groupId") Long groupId);
+
+    @Select("""
+        SELECT EXISTS(
+            SELECT 1 FROM study_group_members 
+            WHERE group_id = #{groupId} AND user_id = #{userId}
+        )
+    """)
+    boolean isUserInGroup(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Select("""
+        SELECT EXISTS(
+            SELECT 1 FROM study_group_requests 
+            WHERE group_id = #{groupId} AND user_id = #{userId} AND status = 'pending'
+        )
+    """)
+    boolean hasPendingRequest(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Insert("""
+        INSERT INTO study_group_members (group_id, user_id, role)
+        VALUES (#{groupId}, #{userId}, 'member')
+    """)
+    int addMember(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Insert("""
+        INSERT INTO study_group_members (group_id, user_id, role)
+        VALUES (#{groupId}, #{userId}, 'admin')
+    """)
+    int addAdmin(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Insert("""
+        INSERT INTO study_group_requests (group_id, user_id, status)
+        VALUES (#{groupId}, #{userId}, 'pending')
+    """)
+    int createJoinRequest(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Update("""
+        UPDATE study_groups 
+        SET member_count = member_count + 1
+        WHERE group_id = #{groupId}
+    """)
+    int incrementMemberCount(@Param("groupId") Long groupId);
+
+    @Select("""
+        SELECT EXISTS(
+            SELECT 1 FROM study_group_members
+            WHERE group_id = #{groupId}
+            AND user_id = #{userId}
+            AND role = 'admin'
+        ) AS isAdmin
+    """)
+    boolean isAdmin(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Update("""
+        UPDATE study_group_requests
+        SET status = 'approved'
+        WHERE group_id = #{groupId} AND request_id = #{requestId}
+    """)
+    int approveRequest(@Param("groupId") Long groupId, @Param("requestId") Long requestId);
+
+    @Update("""
+        UPDATE study_group_requests
+        SET status = 'rejected'
+        WHERE group_id = #{groupId} AND request_id = #{requestId}
+    """)
+    int rejectRequest(@Param("groupId") Long groupId, @Param("requestId") Long requestId);
+
+    @Select("""
+        SELECT user_id FROM study_group_requests 
+        WHERE request_id = #{requestId}
+    """)
+    Long getRequestUserId(@Param("requestId") Long requestId);
 }
