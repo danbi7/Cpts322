@@ -16,21 +16,17 @@ public class StudyGroupController {
     private final StudyGroupService studyGroupService;
 
     @GetMapping
-    public StudyGroupListResponse getStudyGroups(@RequestParam int userId, @RequestParam(required = false) String search,
+    public StudyGroupListResponse getStudyGroups(@RequestParam Long userId, @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size){
         return studyGroupService.getStudyGroups(userId, search, page, size);
     }
 
     @GetMapping("/{groupId}")
-    public StudyGroupResponse getStudyGroup(@PathVariable("groupId") int groupId, @RequestParam int userId){
+    public StudyGroupResponse getStudyGroup(@PathVariable("groupId") Long groupId, @RequestParam Long userId){
         return studyGroupService.getStudyGroupById(groupId, userId);
     }
     @PostMapping
-    public StudyGroupResponse createStudyGroup(@RequestBody StudyGroupRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
-        Long userId = user.getUserId();
-
+    public StudyGroupResponse createStudyGroup(@RequestBody StudyGroupRequest request, @RequestParam Long userId) {
         Long newGroupId = studyGroupService.createStudyGroup(request, userId);
         return StudyGroupResponse.builder()
                 .groupId(newGroupId)
@@ -48,21 +44,13 @@ public class StudyGroupController {
     }
 
     @PutMapping("/{id}")
-    public String updateStudyGroup(@PathVariable Long id, @RequestBody StudyGroupRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
-        Long userId = user.getUserId();
-
+    public String updateStudyGroup(@PathVariable Long id, @RequestBody StudyGroupRequest request, @RequestParam Long userId) {
         studyGroupService.updateStudyGroup(id, request, userId);
         return "Group updated successfully";
     }
 
     @DeleteMapping("/{id}")
-    public String deleteStudyGroup(@PathVariable Long id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
-        Long userId = user.getUserId();
-
+    public String deleteStudyGroup(@PathVariable Long id, @RequestParam Long userId) {
         studyGroupService.deleteStudyGroup(id, userId);
         return "Group deleted successfully";
     }
