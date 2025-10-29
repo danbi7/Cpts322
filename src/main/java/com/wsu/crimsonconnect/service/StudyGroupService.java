@@ -18,7 +18,7 @@ public class StudyGroupService {
 
     public StudyGroupListResponse getStudyGroups(Long userId, String search, int page, int size) {
         int offset = (page - 1) * size;
-        List<StudyGroup> groups = studyGroupMapper.getStudyGroups(userId, search, offset, size);
+        List<StudyGroup> groups = studyGroupMapper.getStudyGroups(userId, search, size, offset);
         int totalItems = studyGroupMapper.countStudyGroups(search);
 
         List<StudyGroupResponse> groupResponses = groups.stream()
