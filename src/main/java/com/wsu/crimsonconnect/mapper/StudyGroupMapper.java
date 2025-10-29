@@ -32,7 +32,7 @@ public interface StudyGroupMapper {
     FROM study_groups g
     WHERE 
         (#{search} IS NULL OR g.name LIKE CONCAT('%', #{search}, '%') OR g.description LIKE CONCAT('%', #{search}, '%'))
-    ORDER BY g.created_at DESC
+    ORDER BY ${orderBy}
     LIMIT #{limit} OFFSET #{offset}
     """)
     @Results(id = "StudyGroupResultMap", value = {
@@ -52,7 +52,8 @@ public interface StudyGroupMapper {
             @Param("userId") Long userId,
             @Param("search") String search,
             @Param("limit") int limit,
-            @Param("offset") int offset
+            @Param("offset") int offset,
+            @Param("orderBy") String orderBy
     );
 
     @Select("""

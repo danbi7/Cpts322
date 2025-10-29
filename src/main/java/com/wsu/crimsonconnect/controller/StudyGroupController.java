@@ -17,8 +17,9 @@ public class StudyGroupController {
 
     @GetMapping
     public StudyGroupListResponse getStudyGroups(@RequestParam Long userId, @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size){
-        return studyGroupService.getStudyGroups(userId, search, page, size);
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "popular") String filter){
+        return studyGroupService.getStudyGroups(userId, search, page, size, filter);
     }
 
     @GetMapping("/{groupId}")
