@@ -169,4 +169,16 @@ public class StudyGroupService {
     public boolean isAdmin(Long groupId, Long userId) {
         return studyGroupMapper.isAdmin(groupId, userId);
     }
+
+    public String leaveStudyGroup(Long groupId, Long userId) {
+        if(isAdmin(groupId, userId)){
+            return "You do not have permission to leave this group.";
+        }
+
+        studyGroupMapper.removeMember(groupId, userId);
+        studyGroupMapper.decrementMemberCount(groupId);
+
+        return "Leaving study group successfully.";
+    }
+
 }
