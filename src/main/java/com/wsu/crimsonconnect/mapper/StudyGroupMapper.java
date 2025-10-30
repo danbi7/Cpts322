@@ -224,6 +224,4 @@ public interface StudyGroupMapper {
             @Result(property = "profileImageUrl", column = "profileImageUrl")
     })
     List<JoinRequestListResponse> getPendingJoinRequests(@Param("groupId") Long groupId);
-
-
 }

@@ -79,4 +79,9 @@ public class StudyGroupController {
     public List<JoinRequestListResponse> getRequests(@PathVariable Long groupId, @RequestParam Long userId) {
         return studyGroupService.getRequestList(groupId, userId);
     }
+
+    @GetMapping("/{groupId}/isAdmin")
+    public boolean isAdmin(@PathVariable Long groupId, @RequestParam Long userId) {
+        return studyGroupService.isAdmin(groupId, userId);
+    }
 }

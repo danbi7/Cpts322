@@ -165,4 +165,8 @@ public class StudyGroupService {
     public List<JoinRequestListResponse> getRequestList(Long groupId, Long userId) {
         return studyGroupMapper.getPendingJoinRequests(groupId);
     }
+
+    public boolean isAdmin(Long groupId, Long userId) {
+        return studyGroupMapper.isAdmin(groupId, userId);
+    }
 }
