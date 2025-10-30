@@ -124,16 +124,26 @@ const CreateGroup: React.FC = () => {
         fullDescription: formData.fullDescription.trim(),
         tags,
         maxMembers: formData.maxMembers,
-        isPrivate: formData.isPrivate
+        private: formData.isPrivate
       };
       
       if (action === 'create') {
         // Call the actual API
         const createdGroup = await studyGroupAPI.createStudyGroup(studyGroupRequest, userId!);
         console.log('Group created successfully:', createdGroup);
-        
-        // Redirect to dashboard or group page
-        navigate('/dashboard');
+
+        // Ensure creator is recognized as a member via API before navigation
+        try {
+          const fresh = await studyGroupAPI.getStudyGroup(createdGroup.groupId, userId!);
+          if (!fresh.member) {
+            try {
+              await studyGroupAPI.joinStudyGroup(createdGroup.groupId, userId!);
+            } catch {}
+          }
+        } catch {}
+
+        // Redirect directly to the newly created group page
+        navigate(`/group/${createdGroup.groupId}`);
       } else {
         // TODO: Implement draft save functionality
         console.log('Draft save not implemented yet');

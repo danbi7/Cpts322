@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
   
   // Filter and search state
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('popular');
-  const [selectedCategory] = useState<CategoryType>('all');
+  // Backend handles filtering/sorting; category is not used client-side
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -56,7 +56,34 @@ const Dashboard: React.FC = () => {
           10,
           selectedFilter
         );
-        setStudyGroups(response.groups);
+        let groups = response.groups;
+
+        // Secondary pass: if backend doesn't flag membership but user is admin, treat as member
+        try {
+          const checks = await Promise.all(
+            groups.map(async (g) => {
+              if (g.member) return { id: g.groupId, isAdmin: false };
+              try {
+                const admin = await studyGroupAPI.isAdmin(g.groupId, Number(userId));
+                return { id: g.groupId, isAdmin: admin };
+              } catch {
+                return { id: g.groupId, isAdmin: false };
+              }
+            })
+          );
+          const adminSet = new Set(checks.filter(c => c.isAdmin).map(c => c.id));
+          if (adminSet.size > 0) {
+            groups = groups.map(g => adminSet.has(g.groupId) ? { ...g, member: true } : g);
+          }
+        } catch {}
+
+        if (selectedFilter === 'myGroup') {
+          groups = groups.filter(g => g.member);
+        }
+        if (selectedFilter === 'myGroup') {
+          groups = groups.filter((g: any) => g.member === true || g.isMember === true);
+        }
+        setStudyGroups(groups);
         setTotalPages(response.pagination.totalPages);
       } catch (err: any) {
         console.error('Failed to fetch study groups:', err);
@@ -70,47 +97,12 @@ const Dashboard: React.FC = () => {
     fetchStudyGroups();
   }, [userId, searchQuery, currentPage, selectedFilter]);
 
-  // Filter groups based on selected filter
-  const filteredGroups = useMemo(() => {
-    let groups = [...studyGroups];
+  useEffect(() => {
+    // Reset page on filter change to avoid empty pages
+    setCurrentPage(1);
+  }, [selectedFilter]);
 
-    // Apply category filter
-    if (selectedCategory !== 'all') {
-      groups = groups.filter(group => {
-        const categoryMap: Record<CategoryType, string[]> = {
-          all: [],
-          cs: ['CS', 'Cpts 322', 'Cpts 355', 'CS 215'],
-          math: ['Math', 'Statistics', 'Stat 360'],
-          science: ['Science', 'Biology', 'Chemistry', 'Physics'],
-          humanities: ['Humanities', 'English', 'Art'],
-        };
-        return group.tags.some(tag => 
-          categoryMap[selectedCategory]?.some(cat => 
-            tag.toLowerCase().includes(cat.toLowerCase())
-          )
-        );
-      });
-    }
-
-    // Apply filter
-    switch (selectedFilter) {
-      case 'popular':
-        groups.sort((a, b) => b.memberCount - a.memberCount);
-        break;
-      case 'newest':
-        groups.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        break;
-      case 'myGroup':
-        groups = groups.filter(group => group.isMember);
-        break;
-      case 'calendar':
-        // For now, same as popular - can be enhanced with calendar integration
-        groups.sort((a, b) => b.memberCount - a.memberCount);
-        break;
-    }
-
-    return groups;
-  }, [studyGroups, selectedFilter, selectedCategory]);
+  // Use server-paginated and filtered results directly
 
   // Handle page changes
   const handlePageChange = (page: number) => {
@@ -131,7 +123,7 @@ const Dashboard: React.FC = () => {
 
   // Get join button state for a group
   const getJoinButtonState = (group: StudyGroupResponse): JoinButtonState => {
-    if (group.isMember) {
+    if (group.member) {
       return { text: 'View Group', disabled: false, variant: 'success' };
     }
     if (group.memberCount >= group.maxMembers) {
@@ -140,7 +132,7 @@ const Dashboard: React.FC = () => {
     if (group.hasPendingRequest) {
       return { text: 'Request Pending', disabled: true, variant: 'pending' };
     }
-    if (group.isPrivate) {
+    if (group.private) {
       return { text: 'Send Join Request', disabled: false, variant: 'private' };
     }
     return { text: 'Join Now', disabled: false, variant: 'public' };
@@ -156,12 +148,13 @@ const Dashboard: React.FC = () => {
     setMessageType('');
 
     try {
-      // TODO: Implement actual join API call when available
-      // await groupAPI.joinGroup(group.groupId);
-      setMessage(`Successfully ${buttonState.text.toLowerCase()} for ${group.name}`);
+      await studyGroupAPI.joinStudyGroup(group.groupId, Number(userId));
+      const refreshedGroup = await studyGroupAPI.getStudyGroup(group.groupId, Number(userId));
+      setStudyGroups(prev => prev.map(g => g.groupId === group.groupId ? refreshedGroup : g));
+      setSelectedGroup(refreshedGroup);
+      setMessage('Membership updated!');
       setMessageType('success');
     } catch (error: any) {
-      console.error('Join group error:', error);
       setMessage('Failed to join group. Please try again.');
       setMessageType('error');
     } finally {
@@ -241,9 +234,9 @@ const Dashboard: React.FC = () => {
               Try Again
             </button>
           </div>
-        ) : filteredGroups.length > 0 ? (
+        ) : studyGroups.length > 0 ? (
           <div className={styles.groupsGrid}>
-            {filteredGroups.map((group) => (
+            {studyGroups.map((group) => (
               <div
                 key={group.groupId}
                 onClick={() => openGroupModal(group)}
@@ -251,7 +244,7 @@ const Dashboard: React.FC = () => {
               >
                 <div className={styles.groupCardHeader}>
                   <h3 className={styles.groupName}>{group.name}</h3>
-                  {group.isPrivate && (
+                  {group.private && (
                     <svg className={styles.lockIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
@@ -270,11 +263,13 @@ const Dashboard: React.FC = () => {
                     <svg className={styles.memberIcon} fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                     </svg>
-                    {group.memberCount}/{group.maxMembers}
+                    {`${group.memberCount}/${group.maxMembers}`}
                   </span>
-                  {group.isMember && (
-                    <span className={styles.memberBadge}>Member</span>
-                  )}
+                  {group.hasPendingRequest ? (
+                      <span className={styles.pendingBadge}>Pending</span>
+                    ) : group.member ? (
+                      <span className={styles.memberBadge}>Member</span>
+                    ) : null}
                 </div>
               </div>
             ))}
@@ -347,7 +342,7 @@ const Dashboard: React.FC = () => {
                 <div className={styles.modalHeaderContent}>
                   <div className={styles.modalTitle}>
                     <h2 className={styles.modalTitleText}>{selectedGroup.name}</h2>
-                    {selectedGroup.isPrivate && (
+                    {selectedGroup.private && (
                       <svg className={styles.modalLockIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
@@ -388,7 +383,7 @@ const Dashboard: React.FC = () => {
                 <div className={styles.statItem}>
                   <p className={styles.statLabel}>Type</p>
                   <p className={styles.statValue}>
-                    {selectedGroup.isPrivate ? 'Private' : 'Public'}
+                    {selectedGroup.private ? 'Private' : 'Public'}
                   </p>
                 </div>
               </div>
@@ -397,10 +392,18 @@ const Dashboard: React.FC = () => {
               <div className={styles.modalActions}>
                 {(() => {
                   const buttonState = getJoinButtonState(selectedGroup);
+                  // Determine if current user is the creator for navigation logic
+                  let isCreatorGroup = false;
+                  try {
+                    const createdIds = JSON.parse(localStorage.getItem('createdGroupIds') || '[]');
+                    if (Array.isArray(createdIds)) {
+                      isCreatorGroup = createdIds.includes(selectedGroup.groupId);
+                    }
+                  } catch {}
                   return (
                     <button
                       onClick={() => {
-                        if (selectedGroup.isMember) {
+                        if (selectedGroup.member || isCreatorGroup) {
                           // If user is already a member, go to group page
                           closeModal();
                           window.location.href = `/group/${selectedGroup.groupId}`;
@@ -412,7 +415,7 @@ const Dashboard: React.FC = () => {
                       disabled={buttonState.disabled || loading}
                       className={`${styles.joinButton} ${styles[buttonState.variant]}`}
                     >
-                      {loading ? 'Processing...' : selectedGroup.isMember ? 'Go to Group' : buttonState.text}
+                      {loading ? 'Processing...' : buttonState.text}
                     </button>
                   );
                 })()}

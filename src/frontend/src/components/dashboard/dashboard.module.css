@@ -362,6 +362,11 @@
   font-weight: 500;
 }
 
+.pendingBadge {
+  color: #eab308;
+  font-weight: 500;
+}
+
 .emptyState {
   text-align: center;
   padding: 3rem 0;

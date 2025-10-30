@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import NavigationBar from '../NavigationBar';
-import { studyGroupAPI, StudyGroupResponse } from '../../services/api';
+import { studyGroupAPI, StudyGroupResponse, JoinRequestProfile } from '../../services/api';
 import styles from './groupPage.module.css';
 
 interface Post {
@@ -39,6 +39,9 @@ const GroupPage: React.FC = () => {
   const [groupInfo, setGroupInfo] = useState<StudyGroupResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [joinRequests, setJoinRequests] = useState<JoinRequestProfile[]>([]);
+  const [actionMessage, setActionMessage] = useState<string>('');
 
   // Fetch group data from API
   useEffect(() => {
@@ -60,6 +63,45 @@ const GroupPage: React.FC = () => {
     
     fetchGroupData();
   }, [groupId, userId]);
+
+  // Determine admin and load join requests if admin
+  useEffect(() => {
+    const fetchAdminAndRequests = async () => {
+      if (!groupId || !userId) return;
+      try {
+        const admin = await studyGroupAPI.isAdmin(parseInt(groupId), userId);
+        setIsAdmin(admin);
+        // If user is admin, ensure UI reflects membership
+        if (admin) {
+          setGroupInfo(prev => prev ? { ...prev, member: true } : prev);
+        }
+        if (admin) {
+          const requests = await studyGroupAPI.getJoinRequests(parseInt(groupId), userId);
+          setJoinRequests(requests);
+        } else {
+          setJoinRequests([]);
+        }
+      } catch (e) {
+        // silently ignore
+      }
+    };
+    fetchAdminAndRequests();
+  }, [groupId, userId]);
+
+  const handleJoinGroup = async () => {
+    if (!groupId || !userId) return;
+    setActionMessage('');
+    try {
+      const message = await studyGroupAPI.joinStudyGroup(parseInt(groupId), userId);
+      setActionMessage(message || 'Join action completed.');
+      // Refresh group info
+      const groupData = await studyGroupAPI.getStudyGroup(parseInt(groupId), userId);
+      setGroupInfo(groupData);
+    } catch (err: any) {
+      const backendMsg = err?.response?.data;
+      setActionMessage(typeof backendMsg === 'string' && backendMsg ? backendMsg : 'Failed to join group.');
+    }
+  };
 
   // Mock posts data - TODO: Replace with real posts API when available
   useEffect(() => {
@@ -296,22 +338,37 @@ const GroupPage: React.FC = () => {
                     </svg>
                     Share
                   </button>
-                  
-                  {groupInfo.isMember ? (
-                    <button className={styles.followingButton}>
-                      <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 00-15 0v5h5l-5 5-5-5h5v-5a7.5 7.5 0 0115 0v5z" />
-                      </svg>
-                      Following
-                    </button>
-                  ) : (
-                    <button className={styles.joinButton}>
-                      <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Join Group
-                    </button>
-                  )}
+
+                  {(() => {
+                    if (groupInfo.member) {
+                      return (
+                        <button className={styles.followingButton} disabled>
+                          <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 00-15 0v5h5l-5 5-5-5h5v-5a7.5 7.5 0 0115 0v5z" />
+                          </svg>
+                          Member
+                        </button>
+                      );
+                    }
+                    if (groupInfo.hasPendingRequest) {
+                      return (
+                        <button className={styles.pendingButton} disabled>
+                          <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          Request Pending
+                        </button>
+                      );
+                    }
+                    return (
+                      <button className={styles.joinButton} onClick={handleJoinGroup}>
+                        <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Join Group
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
               
@@ -363,6 +420,9 @@ const GroupPage: React.FC = () => {
 
             {/* Main Content */}
             <div className={styles.mainContent}>
+              {actionMessage && (
+                <div className={styles.infoBanner}>{actionMessage}</div>
+              )}
               {/* Left Column - Activity Feed */}
               <div className={styles.activityFeed}>
                 {/* Post Creation Input */}
@@ -467,6 +527,70 @@ const GroupPage: React.FC = () => {
 
               {/* Right Column - Sidebar */}
               <div className={styles.sidebar}>
+                {isAdmin && (
+                  <div className={styles.sidebarCard}>
+                    <div className={styles.sidebarCardHeader}>
+                      <h3 className={styles.sidebarTitle}>Pending Join Requests</h3>
+                    </div>
+                    {joinRequests.length === 0 ? (
+                      <div className={styles.noEvents}><p>No pending requests</p></div>
+                    ) : (
+                      <ul className={styles.requestsList}>
+                        {joinRequests.map((r) => (
+                          <li key={r.userId} className={styles.requestItem}>
+                            <div className={styles.requestInfo}>
+                              <div className={styles.requestAvatar}>
+                                {r.profileImageUrl ? (
+                                  <img src={r.profileImageUrl} alt={`${r.firstName} ${r.lastName}`} />
+                                ) : (
+                                  <>{r.firstName?.charAt(0)}{r.lastName?.charAt(0)}</>
+                                )}
+                              </div>
+                              <div>
+                                <div className={styles.requestName}>{r.firstName} {r.lastName}</div>
+                                <div className={styles.requestMeta}>{r.email} {r.nickname ? `• ${r.nickname}` : ''}</div>
+                              </div>
+                            </div>
+                            <div className={styles.requestActions}>
+                              <button
+                                className={styles.approveButton}
+                                disabled={!r.requestId}
+                                onClick={async () => {
+                                  if (!groupId || !userId || !r.requestId) return;
+                                  try {
+                                    await studyGroupAPI.approveJoinRequest(parseInt(groupId), r.requestId, userId);
+                                    const updated = await studyGroupAPI.getJoinRequests(parseInt(groupId), userId);
+                                    setJoinRequests(updated);
+                                  } catch (e: any) {
+                                    // Intentionally no on-screen message for approve per request
+                                  }
+                                }}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                className={styles.rejectButton}
+                                disabled={!r.requestId}
+                                onClick={async () => {
+                                  if (!groupId || !userId || !r.requestId) return;
+                                  try {
+                                    await studyGroupAPI.rejectJoinRequest(parseInt(groupId), r.requestId, userId);
+                                    const updated = await studyGroupAPI.getJoinRequests(parseInt(groupId), userId);
+                                    setJoinRequests(updated);
+                                  } catch (e: any) {
+                                    // Intentionally no on-screen message for reject per request
+                                  }
+                                }}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
                 {/* About Section */}
                 <div className={styles.sidebarCard}>
                   <h3 className={styles.sidebarTitle}>About</h3>
