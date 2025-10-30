@@ -33,19 +33,7 @@ public class StudyGroupController {
     @PostMapping
     public StudyGroupResponse createStudyGroup(@RequestBody StudyGroupRequest request, @RequestParam Long userId) {
         Long newGroupId = studyGroupService.createStudyGroup(request, userId);
-        return StudyGroupResponse.builder()
-                .groupId(newGroupId)
-                .name(request.getName())
-                .description(request.getDescription())
-                .fullDescription(request.getFullDescription())
-                .tags(request.getTags())
-                .maxMembers(request.getMaxMembers())
-                .isPrivate(request.isPrivate())
-                .memberCount(0)
-                .isMember(true)
-                .hasPendingRequest(false)
-                .createdAt(java.time.LocalDateTime.now())
-                .build();
+        return studyGroupService.getStudyGroupById(newGroupId, userId);
     }
 
     @PutMapping("/{id}")
