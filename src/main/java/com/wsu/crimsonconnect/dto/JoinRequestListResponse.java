@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class JoinRequestListResponse {
+    private Long requestId;
     private Long userId;
     private String firstName;
     private String lastName;

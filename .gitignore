@@ -61,3 +61,4 @@ application.properties
 
 node_modules/
 src/frontend/node_modules/
+.history/

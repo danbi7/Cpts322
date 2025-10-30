@@ -11,6 +11,7 @@ import ResetPasswordPage from './components/resetPassword/resetPassword';
 import GroupPage from './components/group/GroupPage';
 import ProfilePage from './components/profile/ProfilePage';
 import ProfileCreation from './components/profileCreation/ProfileCreation';
+import CreateGroup from './components/createGroup/CreateGroup';
 
 function App() {
   return (
@@ -45,6 +46,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ProfilePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/create-group" 
+              element={
+                <ProtectedRoute>
+                  <CreateGroup />
                 </ProtectedRoute>
               } 
             />

@@ -202,6 +202,7 @@ public interface StudyGroupMapper {
 
     @Select("""
         SELECT 
+            r.request_id AS requestId,
             u.user_id AS userId,
             u.first_name AS firstName,
             u.last_name AS lastName,
@@ -216,6 +217,7 @@ public interface StudyGroupMapper {
         ORDER BY r.requested_at DESC
     """)
     @Results(id = "JoinRequestProfileMap", value = {
+            @Result(property = "requestId", column = "requestId"),
             @Result(property = "userId", column = "userId"),
             @Result(property = "firstName", column = "firstName"),
             @Result(property = "lastName", column = "lastName"),
