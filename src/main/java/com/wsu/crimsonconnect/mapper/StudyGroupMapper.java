@@ -226,4 +226,17 @@ public interface StudyGroupMapper {
             @Result(property = "profileImageUrl", column = "profileImageUrl")
     })
     List<JoinRequestListResponse> getPendingJoinRequests(@Param("groupId") Long groupId);
+
+    @Delete("""
+        DELETE FROM study_group_members
+        WHERE group_id = #{groupId} AND user_id = #{userId}
+    """)
+    int removeMember(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Update("""
+        UPDATE study_groups
+        SET member_count = member_count - 1
+        WHERE group_id = #{groupId}
+    """)
+    int decrementMemberCount(@Param("groupId") Long groupId);
 }

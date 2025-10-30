@@ -72,4 +72,9 @@ public class StudyGroupController {
     public boolean isAdmin(@PathVariable Long groupId, @RequestParam Long userId) {
         return studyGroupService.isAdmin(groupId, userId);
     }
+
+    @PostMapping("/{groupId}/leave")
+    public String leaveStudyGroup(@PathVariable Long groupId, @RequestParam Long userId) {
+        return studyGroupService.leaveStudyGroup(groupId, userId);
+    }
 }
