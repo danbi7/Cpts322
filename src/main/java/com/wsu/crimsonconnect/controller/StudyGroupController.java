@@ -1,5 +1,7 @@
 package com.wsu.crimsonconnect.controller;
+import com.wsu.crimsonconnect.dto.JoinRequestListResponse;
 import com.wsu.crimsonconnect.dto.StudyGroupRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.wsu.crimsonconnect.domain.User;
@@ -8,6 +10,8 @@ import com.wsu.crimsonconnect.dto.StudyGroupResponse;
 import com.wsu.crimsonconnect.service.StudyGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/study-groups")
@@ -56,4 +60,28 @@ public class StudyGroupController {
         return "Group deleted successfully";
     }
 
+    @PostMapping("/{groupId}/join")
+    public String joinStudyGroup(@PathVariable Long groupId, @RequestParam Long userId) {
+        return studyGroupService.joinStudyGroup(groupId, userId);
+    }
+
+    @PostMapping("/{groupId}/requests/{requestId}/approve")
+    public String approveRequest(@PathVariable Long groupId, @PathVariable Long requestId, @RequestParam Long userId) {
+        return studyGroupService.approveRequest(groupId, requestId, userId);
+    }
+
+    @PostMapping("/{groupId}/requests/{requestId}/reject")
+    public String rejectRequest(@PathVariable Long groupId, @PathVariable Long requestId, @RequestParam Long userId) {
+        return studyGroupService.rejectRequest(groupId, requestId,userId);
+    }
+
+    @GetMapping("/{groupId}/requests")
+    public List<JoinRequestListResponse> getRequests(@PathVariable Long groupId, @RequestParam Long userId) {
+        return studyGroupService.getRequestList(groupId, userId);
+    }
+
+    @GetMapping("/{groupId}/isAdmin")
+    public boolean isAdmin(@PathVariable Long groupId, @RequestParam Long userId) {
+        return studyGroupService.isAdmin(groupId, userId);
+    }
 }
