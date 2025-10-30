@@ -1,5 +1,7 @@
 package com.wsu.crimsonconnect.controller;
+import com.wsu.crimsonconnect.dto.JoinRequestListResponse;
 import com.wsu.crimsonconnect.dto.StudyGroupRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.wsu.crimsonconnect.domain.User;
@@ -8,6 +10,8 @@ import com.wsu.crimsonconnect.dto.StudyGroupResponse;
 import com.wsu.crimsonconnect.service.StudyGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/study-groups")
@@ -69,5 +73,10 @@ public class StudyGroupController {
     @PostMapping("/{groupId}/requests/{requestId}/reject")
     public String rejectRequest(@PathVariable Long groupId, @PathVariable Long requestId, @RequestParam Long userId) {
         return studyGroupService.rejectRequest(groupId, requestId,userId);
+    }
+
+    @GetMapping("/{groupId}/requests")
+    public List<JoinRequestListResponse> getRequests(@PathVariable Long groupId, @RequestParam Long userId) {
+        return studyGroupService.getRequestList(groupId, userId);
     }
 }

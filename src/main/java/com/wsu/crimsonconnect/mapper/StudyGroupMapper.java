@@ -1,6 +1,7 @@
 package com.wsu.crimsonconnect.mapper;
 
 import com.wsu.crimsonconnect.domain.StudyGroup;
+import com.wsu.crimsonconnect.dto.JoinRequestListResponse;
 import org.apache.ibatis.annotations.*;
 import org.springframework.web.bind.annotation.PostMapping;
 
@@ -198,4 +199,31 @@ public interface StudyGroupMapper {
         WHERE request_id = #{requestId}
     """)
     Long getRequestUserId(@Param("requestId") Long requestId);
+
+    @Select("""
+        SELECT 
+            u.user_id AS userId,
+            u.first_name AS firstName,
+            u.last_name AS lastName,
+            u.email AS email,
+            p.nickname AS nickname,
+            p.profile_image_url AS profileImageUrl
+        FROM study_group_requests r
+        JOIN users u ON r.user_id = u.user_id
+        LEFT JOIN user_profile p ON u.user_id = p.user_id
+        WHERE r.group_id = #{groupId}
+          AND r.status = 'pending'
+        ORDER BY r.requested_at DESC
+    """)
+    @Results(id = "JoinRequestProfileMap", value = {
+            @Result(property = "userId", column = "userId"),
+            @Result(property = "firstName", column = "firstName"),
+            @Result(property = "lastName", column = "lastName"),
+            @Result(property = "email", column = "email"),
+            @Result(property = "nickname", column = "nickname"),
+            @Result(property = "profileImageUrl", column = "profileImageUrl")
+    })
+    List<JoinRequestListResponse> getPendingJoinRequests(@Param("groupId") Long groupId);
+
+
 }
