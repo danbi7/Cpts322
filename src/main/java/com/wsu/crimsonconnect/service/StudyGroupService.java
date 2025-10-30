@@ -1,4 +1,5 @@
 package com.wsu.crimsonconnect.service;
+import com.wsu.crimsonconnect.dto.JoinRequestListResponse;
 import com.wsu.crimsonconnect.dto.StudyGroupRequest;
 
 import com.wsu.crimsonconnect.domain.StudyGroup;
@@ -159,5 +160,13 @@ public class StudyGroupService {
 
         studyGroupMapper.rejectRequest(groupId, requestId);
         return "Request rejected.";
+    }
+
+    public List<JoinRequestListResponse> getRequestList(Long groupId, Long userId) {
+        return studyGroupMapper.getPendingJoinRequests(groupId);
+    }
+
+    public boolean isAdmin(Long groupId, Long userId) {
+        return studyGroupMapper.isAdmin(groupId, userId);
     }
 }
