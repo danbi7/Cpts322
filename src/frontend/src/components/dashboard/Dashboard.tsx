@@ -1,271 +1,108 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import NavigationBar from '../NavigationBar';
+import { studyGroupAPI, StudyGroupResponse } from '../../services/api';
 import styles from './dashboard.module.css';
 
 // Type Definitions
-interface StudyGroup {
-  id: number;
-  name: string;
-  description: string;
-  fullDescription: string;
-  tags: string[];
-  memberCount: number;
-  maxMembers: number;
-  isPrivate: boolean;
-  isMember: boolean;
-  hasPendingRequest: boolean;
-  createdAt: Date;
-}
-
 interface JoinButtonState {
   text: string;
   disabled: boolean;
   variant: 'success' | 'disabled' | 'pending' | 'private' | 'public';
 }
 
-// Mock Data - Easy to replace with API calls later
-const MOCK_GROUPS: StudyGroup[] = [
-  {
-    id: 1,
-    name: "Cpts 322 - Software Engineering",
-    description: "Weekly study sessions for SE concepts, project help, and exam prep.",
-    fullDescription: "Join us for comprehensive coverage of software engineering principles, design patterns, and agile methodologies. We meet twice weekly for collaborative learning sessions, code reviews, and exam preparation. Perfect for students looking to excel in Cpts 322.",
-    tags: ["Cpts 322", "CS", "Engineering"],
-    memberCount: 12,
-    maxMembers: 20,
-    isPrivate: false,
-    isMember: true,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-01-15'),
-  },
-  {
-    id: 2,
-    name: "English 402 - Writing Workshop",
-    description: "Peer review and writing practice for advanced composition.",
-    fullDescription: "A collaborative space for students enrolled in English 402 to share their work, receive constructive feedback, and improve their writing skills. We focus on academic writing, creative pieces, and research papers.",
-    tags: ["English 402", "Humanities", "Writing"],
-    memberCount: 8,
-    maxMembers: 15,
-    isPrivate: true,
-    isMember: false,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-02-01'),
-  },
-  {
-    id: 3,
-    name: "Stat 360 - Statistical Analysis",
-    description: "Master probability and statistics through collaborative problem solving.",
-    fullDescription: "This group focuses on understanding statistical concepts, working through problem sets together, and preparing for exams. We use R and Python for data analysis projects and share helpful resources.",
-    tags: ["Stat 360", "Math", "Statistics"],
-    memberCount: 15,
-    maxMembers: 15,
-    isPrivate: false,
-    isMember: false,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-01-20'),
-  },
-  {
-    id: 4,
-    name: "CS 215 - Data Structures Study Group",
-    description: "Learn algorithms and data structures through hands-on practice.",
-    fullDescription: "Dive deep into data structures including trees, graphs, hash tables, and sorting algorithms. We work on coding challenges, review homework assignments, and prepare for technical interviews.",
-    tags: ["CS 215", "CS", "Algorithms"],
-    memberCount: 18,
-    maxMembers: 25,
-    isPrivate: false,
-    isMember: false,
-    hasPendingRequest: true,
-    createdAt: new Date('2025-10-10'),
-  },
-  {
-    id: 5,
-    name: "Bio 101 - General Biology",
-    description: "Study cellular processes, genetics, and evolution together.",
-    fullDescription: "A supportive environment for Bio 101 students to review lecture materials, work through lab reports, and prepare for quizzes and exams. We share study guides and mnemonics to help with memorization.",
-    tags: ["Bio 101", "Science", "Biology"],
-    memberCount: 10,
-    maxMembers: 20,
-    isPrivate: false,
-    isMember: false,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-01-10'),
-  },
-  {
-    id: 6,
-    name: "Math 220 - Calculus II",
-    description: "Integration techniques, series, and calculus applications.",
-    fullDescription: "Tackle the challenging topics of Calculus II including integration methods, infinite series, parametric equations, and polar coordinates. Group sessions include practice problems and exam review.",
-    tags: ["Math 220", "Math", "Calculus"],
-    memberCount: 14,
-    maxMembers: 18,
-    isPrivate: true,
-    isMember: false,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-09-15'),
-  },
-  {
-    id: 7,
-    name: "Cpts 355 - Programming Language Design",
-    description: "Explore functional programming and language paradigms.",
-    fullDescription: "Study programming language concepts including syntax, semantics, type systems, and runtime environments. We work with languages like Python, Haskell, and Prolog to understand different paradigms.",
-    tags: ["Cpts 355", "CS", "Programming"],
-    memberCount: 9,
-    maxMembers: 15,
-    isPrivate: false,
-    isMember: true,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-02-05'),
-  },
-  {
-    id: 8,
-    name: "Psych 105 - Introduction to Psychology",
-    description: "Discussion group for psychology concepts and research methods.",
-    fullDescription: "Explore the fundamentals of psychology including cognitive processes, developmental psychology, social behavior, and mental health. We discuss case studies, research papers, and prepare for exams together.",
-    tags: ["Psych 105", "Social Science", "Psychology"],
-    memberCount: 11,
-    maxMembers: 20,
-    isPrivate: false,
-    isMember: false,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-10-01'),
-  },
-  {
-    id: 9,
-    name: "Econ 101 - Microeconomics",
-    description: "Understand supply, demand, and market structures.",
-    fullDescription: "A study group dedicated to mastering microeconomic principles including consumer theory, producer theory, market equilibrium, and welfare economics. We solve problem sets and analyze real-world economic scenarios.",
-    tags: ["Econ 101", "Economics", "Business"],
-    memberCount: 13,
-    maxMembers: 20,
-    isPrivate: false,
-    isMember: false,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-08-20'),
-  },
-  {
-    id: 10,
-    name: "Chem 105 - General Chemistry",
-    description: "Chemistry fundamentals and lab experiment help.",
-    fullDescription: "Cover atomic structure, chemical bonding, stoichiometry, thermodynamics, and equilibrium. We help each other with lab reports, practice problems, and exam preparation.",
-    tags: ["Chem 105", "Science", "Chemistry"],
-    memberCount: 16,
-    maxMembers: 22,
-    isPrivate: false,
-    isMember: false,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-09-01'),
-  },
-  {
-    id: 11,
-    name: "Art 101 - Art History",
-    description: "Explore art movements from Renaissance to Modern era.",
-    fullDescription: "Journey through the history of art, examining major movements, influential artists, and cultural contexts. We share visual resources, discuss art theory, and prepare presentations together.",
-    tags: ["Art 101", "Humanities", "Art"],
-    memberCount: 7,
-    maxMembers: 12,
-    isPrivate: true,
-    isMember: false,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-10-05'),
-  },
-  {
-    id: 12,
-    name: "Physics 201 - University Physics",
-    description: "Mechanics, waves, and thermodynamics study sessions.",
-    fullDescription: "Master classical mechanics, oscillations, waves, and thermal physics through collaborative problem solving. We work through challenging textbook problems and lab assignments together.",
-    tags: ["Physics 201", "Science", "Physics"],
-    memberCount: 15,
-    maxMembers: 20,
-    isPrivate: false,
-    isMember: true,
-    hasPendingRequest: false,
-    createdAt: new Date('2025-07-25'),
-  },
-];
-
-const MOCK_USERNAME = "JohnDoe"; // Replace with actual user data from API
-
 type FilterType = 'popular' | 'newest' | 'myGroup' | 'calendar';
 type CategoryType = 'all' | 'cs' | 'math' | 'science' | 'humanities';
 
 const Dashboard: React.FC = () => {
-  const { logout, isAuthenticated } = useAuth();
+  const { userId } = useAuth();
+  
+  // State for study groups
+  const [studyGroups, setStudyGroups] = useState<StudyGroupResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   
   // Filter and search state
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('popular');
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all');
+  // Backend handles filtering/sorting; category is not used client-side
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   
   // Modal state
-  const [selectedGroup, setSelectedGroup] = useState<StudyGroup | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<StudyGroupResponse | null>(null);
   
-  // UI state
-  const [loading, setLoading] = useState(false);
+  // Message state
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
-
-  const GROUPS_PER_PAGE = 9;
-
-  // Filter and search groups
-  const filteredGroups = useMemo(() => {
-    let groups = [...MOCK_GROUPS];
-
-    // Apply search
-    if (searchQuery) {
-      groups = groups.filter(group => 
-        group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        group.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        group.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Apply category filter
-    if (selectedCategory !== 'all') {
-      groups = groups.filter(group => {
-        const categoryMap: Record<CategoryType, string[]> = {
-          all: [],
-          cs: ['CS', 'Cpts 322', 'Cpts 355', 'CS 215'],
-          math: ['Math', 'Statistics', 'Stat 360'],
-          science: ['Science', 'Biology', 'Chemistry', 'Physics'],
-          humanities: ['Humanities', 'English', 'Art'],
-        };
-        return group.tags.some(tag => 
-          categoryMap[selectedCategory]?.some(cat => 
-            tag.toLowerCase().includes(cat.toLowerCase())
-          )
+  
+  // Fetch study groups from API
+  useEffect(() => {
+    const fetchStudyGroups = async () => {
+      if (!userId) {
+        console.log('No userId available');
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        setError('');
+        console.log('Fetching study groups with userId:', userId);
+        const response = await studyGroupAPI.getStudyGroups(
+          userId, 
+          searchQuery || undefined, 
+          currentPage, 
+          10,
+          selectedFilter
         );
-      });
-    }
+        let groups = response.groups;
 
-    // Apply filter
-    switch (selectedFilter) {
-      case 'popular':
-        groups.sort((a, b) => b.memberCount - a.memberCount);
-        break;
-      case 'newest':
-        groups.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        break;
-      case 'myGroup':
-        groups = groups.filter(group => group.isMember);
-        break;
-      case 'calendar':
-        // For now, same as popular - can be enhanced with calendar integration
-        groups.sort((a, b) => b.memberCount - a.memberCount);
-        break;
-    }
+        // Secondary pass: if backend doesn't flag membership but user is admin, treat as member
+        try {
+          const checks = await Promise.all(
+            groups.map(async (g) => {
+              if (g.member) return { id: g.groupId, isAdmin: false };
+              try {
+                const admin = await studyGroupAPI.isAdmin(g.groupId, Number(userId));
+                return { id: g.groupId, isAdmin: admin };
+              } catch {
+                return { id: g.groupId, isAdmin: false };
+              }
+            })
+          );
+          const adminSet = new Set(checks.filter(c => c.isAdmin).map(c => c.id));
+          if (adminSet.size > 0) {
+            groups = groups.map(g => adminSet.has(g.groupId) ? { ...g, member: true } : g);
+          }
+        } catch {}
 
-    return groups;
-  }, [selectedFilter, selectedCategory, searchQuery]);
+        if (selectedFilter === 'myGroup') {
+          groups = groups.filter(g => g.member);
+        }
+        if (selectedFilter === 'myGroup') {
+          groups = groups.filter((g: any) => g.member === true || g.isMember === true);
+        }
+        setStudyGroups(groups);
+        setTotalPages(response.pagination.totalPages);
+      } catch (err: any) {
+        console.error('Failed to fetch study groups:', err);
+        setError('Failed to load study groups. Please try again.');
+        setStudyGroups([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchStudyGroups();
+  }, [userId, searchQuery, currentPage, selectedFilter]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredGroups.length / GROUPS_PER_PAGE);
-  const startIndex = (currentPage - 1) * GROUPS_PER_PAGE;
-  const paginatedGroups = filteredGroups.slice(startIndex, startIndex + GROUPS_PER_PAGE);
+  useEffect(() => {
+    // Reset page on filter change to avoid empty pages
+    setCurrentPage(1);
+  }, [selectedFilter]);
+
+  // Use server-paginated and filtered results directly
 
   // Handle page changes
   const handlePageChange = (page: number) => {
@@ -274,7 +111,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Handle modal operations
-  const openGroupModal = (group: StudyGroup) => {
+  const openGroupModal = (group: StudyGroupResponse) => {
     setSelectedGroup(group);
     setIsModalOpen(true);
   };
@@ -285,8 +122,8 @@ const Dashboard: React.FC = () => {
   };
 
   // Get join button state for a group
-  const getJoinButtonState = (group: StudyGroup): JoinButtonState => {
-    if (group.isMember) {
+  const getJoinButtonState = (group: StudyGroupResponse): JoinButtonState => {
+    if (group.member) {
       return { text: 'View Group', disabled: false, variant: 'success' };
     }
     if (group.memberCount >= group.maxMembers) {
@@ -295,14 +132,14 @@ const Dashboard: React.FC = () => {
     if (group.hasPendingRequest) {
       return { text: 'Request Pending', disabled: true, variant: 'pending' };
     }
-    if (group.isPrivate) {
+    if (group.private) {
       return { text: 'Send Join Request', disabled: false, variant: 'private' };
     }
     return { text: 'Join Now', disabled: false, variant: 'public' };
   };
 
   // Handle join group action
-  const handleJoinAction = async (group: StudyGroup) => {
+  const handleJoinAction = async (group: StudyGroupResponse) => {
     const buttonState = getJoinButtonState(group);
     if (buttonState.disabled) return;
 
@@ -311,12 +148,13 @@ const Dashboard: React.FC = () => {
     setMessageType('');
 
     try {
-      // Mock action - replace with actual API call
-      // await groupAPI.joinGroup(group.id);
-      // setMessage(`Successfully ${buttonState.text.toLowerCase()} for ${group.name}`);
-      // setMessageType('success');
+      await studyGroupAPI.joinStudyGroup(group.groupId, Number(userId));
+      const refreshedGroup = await studyGroupAPI.getStudyGroup(group.groupId, Number(userId));
+      setStudyGroups(prev => prev.map(g => g.groupId === group.groupId ? refreshedGroup : g));
+      setSelectedGroup(refreshedGroup);
+      setMessage('Membership updated!');
+      setMessageType('success');
     } catch (error: any) {
-      console.error('Join group error:', error);
       setMessage('Failed to join group. Please try again.');
       setMessageType('error');
     } finally {
@@ -366,20 +204,47 @@ const Dashboard: React.FC = () => {
           >
             Calendar
           </button>
+          <button
+            onClick={() => window.location.href = '/create-group'}
+            className={styles.createGroupButton}
+          >
+            <svg className={styles.plusIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Create New Group
+          </button>
         </div>
 
         {/* Study Groups Grid */}
-        {paginatedGroups.length > 0 ? (
+        {loading ? (
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Loading study groups...</p>
+          </div>
+        ) : error ? (
+          <div className={styles.errorContainer}>
+            <svg className={styles.errorIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <p className={styles.errorText}>{error}</p>
+            <button 
+              className={styles.retryButton}
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </button>
+          </div>
+        ) : studyGroups.length > 0 ? (
           <div className={styles.groupsGrid}>
-            {paginatedGroups.map((group) => (
+            {studyGroups.map((group) => (
               <div
-                key={group.id}
+                key={group.groupId}
                 onClick={() => openGroupModal(group)}
                 className={styles.groupCard}
               >
                 <div className={styles.groupCardHeader}>
                   <h3 className={styles.groupName}>{group.name}</h3>
-                  {group.isPrivate && (
+                  {group.private && (
                     <svg className={styles.lockIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
@@ -398,11 +263,13 @@ const Dashboard: React.FC = () => {
                     <svg className={styles.memberIcon} fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                     </svg>
-                    {group.memberCount}/{group.maxMembers}
+                    {`${group.memberCount}/${group.maxMembers}`}
                   </span>
-                  {group.isMember && (
-                    <span className={styles.memberBadge}>Member</span>
-                  )}
+                  {group.hasPendingRequest ? (
+                      <span className={styles.pendingBadge}>Pending</span>
+                    ) : group.member ? (
+                      <span className={styles.memberBadge}>Member</span>
+                    ) : null}
                 </div>
               </div>
             ))}
@@ -475,7 +342,7 @@ const Dashboard: React.FC = () => {
                 <div className={styles.modalHeaderContent}>
                   <div className={styles.modalTitle}>
                     <h2 className={styles.modalTitleText}>{selectedGroup.name}</h2>
-                    {selectedGroup.isPrivate && (
+                    {selectedGroup.private && (
                       <svg className={styles.modalLockIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
@@ -516,7 +383,7 @@ const Dashboard: React.FC = () => {
                 <div className={styles.statItem}>
                   <p className={styles.statLabel}>Type</p>
                   <p className={styles.statValue}>
-                    {selectedGroup.isPrivate ? 'Private' : 'Public'}
+                    {selectedGroup.private ? 'Private' : 'Public'}
                   </p>
                 </div>
               </div>
@@ -525,13 +392,21 @@ const Dashboard: React.FC = () => {
               <div className={styles.modalActions}>
                 {(() => {
                   const buttonState = getJoinButtonState(selectedGroup);
+                  // Determine if current user is the creator for navigation logic
+                  let isCreatorGroup = false;
+                  try {
+                    const createdIds = JSON.parse(localStorage.getItem('createdGroupIds') || '[]');
+                    if (Array.isArray(createdIds)) {
+                      isCreatorGroup = createdIds.includes(selectedGroup.groupId);
+                    }
+                  } catch {}
                   return (
                     <button
                       onClick={() => {
-                        if (selectedGroup.isMember) {
+                        if (selectedGroup.member || isCreatorGroup) {
                           // If user is already a member, go to group page
                           closeModal();
-                          window.location.href = `/group/${selectedGroup.id}`;
+                          window.location.href = `/group/${selectedGroup.groupId}`;
                         } else {
                           // If not a member, show join functionality (not implemented yet)
                           handleJoinAction(selectedGroup);
@@ -540,7 +415,7 @@ const Dashboard: React.FC = () => {
                       disabled={buttonState.disabled || loading}
                       className={`${styles.joinButton} ${styles[buttonState.variant]}`}
                     >
-                      {loading ? 'Processing...' : selectedGroup.isMember ? 'Go to Group' : buttonState.text}
+                      {loading ? 'Processing...' : buttonState.text}
                     </button>
                   );
                 })()}

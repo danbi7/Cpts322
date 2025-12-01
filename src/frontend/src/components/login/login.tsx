@@ -55,7 +55,7 @@ const LoginPage: React.FC = () => {
       const response = await authAPI.login(formData);
       
       // Update authentication state
-      login(response.token);
+      await login(response.token);
       
       setMessage('Login successful! Redirecting...');
       setMessageType('success');

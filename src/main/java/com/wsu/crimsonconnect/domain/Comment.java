@@ -1,13 +1,19 @@
 package com.wsu.crimsonconnect.domain;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Comment {
     private Long commentId;
     private Long postId;
     private Long userId;
-    private Integer replyingToUserId;
+    private Long replyingToUserId;
     private String content;
+    private LocalDateTime createdAt;
 }
-

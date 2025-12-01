@@ -89,6 +89,49 @@ export interface ProfileUpdateRequest {
     profileImageUrl: string;
 }
 
+export interface StudyGroupRequest {
+    name: string;
+    description: string;
+    fullDescription: string;
+    tags: string[];
+    maxMembers: number;
+    'private': boolean;
+}
+
+export interface StudyGroupResponse {
+    groupId: number;
+    name: string;
+    description: string;
+    fullDescription: string;
+    tags: string[];
+    memberCount: number;
+    maxMembers: number;
+    'private': boolean;
+    'member': boolean;
+    hasPendingRequest: boolean;
+    createdAt: string;
+}
+
+export interface StudyGroupListResponse {
+    groups: StudyGroupResponse[];
+    pagination: {
+        page: number;
+        size: number;
+        totalPages: number;
+        totalItems: number;
+    };
+}
+
+export interface JoinRequestProfile {
+    requestId: number;
+    userId: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    nickname: string;
+    profileImageUrl: string;
+}
+
 
 export const authAPI = {
     signup: async (data: SignupRequest) => {
@@ -128,6 +171,11 @@ export const profileAPI = {
         return response.data;
     },
     
+    createProfile: async (data: ProfileUpdateRequest): Promise<string> => {
+        const response = await api.post('/profile', data);
+        return response.data;
+    },
+    
     updateProfile: async (data: ProfileUpdateRequest): Promise<ProfileResponse> => {
         const response = await api.put('/profile', data);
         return response.data;
@@ -135,6 +183,69 @@ export const profileAPI = {
     
     deleteProfile: async (): Promise<void> => {
         const response = await api.delete('/profile');
+        return response.data;
+    },
+};
+
+export const studyGroupAPI = {
+    getStudyGroups: async (userId: number, search?: string, page: number = 1, size: number = 10, filter: string = 'popular'): Promise<StudyGroupListResponse> => {
+        // Avoid backend ORDER BY alias issue by falling back to popular when requesting myGroup
+        const normalizedFilter = filter === 'myGroup' ? 'popular' : filter?.toLowerCase?.() || 'popular';
+        const params = new URLSearchParams({
+            userId: userId.toString(),
+            page: page.toString(),
+            size: size.toString(),
+            filter: normalizedFilter
+        });
+        if (search) {
+            params.append('search', search);
+        }
+        const response = await api.get(`/study-groups?${params}`);
+        return response.data;
+    },
+    
+    getStudyGroup: async (groupId: number, userId: number): Promise<StudyGroupResponse> => {
+        const response = await api.get(`/study-groups/${groupId}?userId=${userId}`);
+        return response.data;
+    },
+    
+    createStudyGroup: async (data: StudyGroupRequest, userId: number): Promise<StudyGroupResponse> => {
+        const response = await api.post(`/study-groups?userId=${userId}`, data);
+        return response.data;
+    },
+    
+    updateStudyGroup: async (groupId: number, data: StudyGroupRequest, userId: number): Promise<string> => {
+        const response = await api.put(`/study-groups/${groupId}?userId=${userId}`, data);
+        return response.data;
+    },
+    
+    deleteStudyGroup: async (groupId: number, userId: number): Promise<string> => {
+        const response = await api.delete(`/study-groups/${groupId}?userId=${userId}`);
+        return response.data;
+    },
+    
+    joinStudyGroup: async (groupId: number, userId: number): Promise<string> => {
+        const response = await api.post(`/study-groups/${groupId}/join?userId=${userId}`);
+        return response.data;
+    },
+
+    isAdmin: async (groupId: number, userId: number): Promise<boolean> => {
+        const response = await api.get(`/study-groups/${groupId}/isAdmin?userId=${userId}`);
+        return response.data;
+    },
+
+    getJoinRequests: async (groupId: number, userId: number): Promise<JoinRequestProfile[]> => {
+        const response = await api.get(`/study-groups/${groupId}/requests?userId=${userId}`);
+        return response.data;
+    },
+
+    approveJoinRequest: async (groupId: number, requestId: number, userId: number): Promise<string> => {
+        const response = await api.post(`/study-groups/${groupId}/requests/${requestId}/approve?userId=${userId}`);
+        return response.data;
+    },
+
+    rejectJoinRequest: async (groupId: number, requestId: number, userId: number): Promise<string> => {
+        const response = await api.post(`/study-groups/${groupId}/requests/${requestId}/reject?userId=${userId}`);
         return response.data;
     },
 };
