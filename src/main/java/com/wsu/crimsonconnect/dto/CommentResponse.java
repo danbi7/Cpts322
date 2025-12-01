@@ -1,20 +1,22 @@
 package com.wsu.crimsonconnect.dto;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class CommentResponse {
     private Long commentId;
-    private Long userId;
-    private String nickname;
-    private String profileImageUrl;
-    private String replyingTo;
+    private Long postId;
     private String content;
     private LocalDateTime createdAt;
+
+    private Long userId;
+    private String username;
+    private String userProfileImage;
+
+    private Long replyingToUserId;
+    private String replyingToUsername;
 }
