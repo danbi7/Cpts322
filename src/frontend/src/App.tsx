@@ -12,6 +12,7 @@ import GroupPage from './components/group/GroupPage';
 import ProfilePage from './components/profile/ProfilePage';
 import ProfileCreation from './components/profileCreation/ProfileCreation';
 import CreateGroup from './components/createGroup/CreateGroup';
+import UpdateGroup from './components/updateGroup/UpdateGroup';
 
 function App() {
   return (
@@ -54,6 +55,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CreateGroup />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/update-group/:groupId" 
+              element={
+                <ProtectedRoute>
+                  <UpdateGroup />
                 </ProtectedRoute>
               } 
             />

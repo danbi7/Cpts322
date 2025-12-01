@@ -132,6 +132,21 @@ export interface JoinRequestProfile {
     profileImageUrl: string;
 }
 
+export interface PostCreateRequest {
+    title: string;
+    content: string;
+}
+
+export interface PostResponseDTO {
+    postId: number;
+    title: string;
+    content: string;
+    viewCount: number;
+    likeCount: number;
+    createdAt: string;
+    updatedAt?: string;
+}
+
 
 export const authAPI = {
     signup: async (data: SignupRequest) => {
@@ -246,6 +261,30 @@ export const studyGroupAPI = {
 
     rejectJoinRequest: async (groupId: number, requestId: number, userId: number): Promise<string> => {
         const response = await api.post(`/study-groups/${groupId}/requests/${requestId}/reject?userId=${userId}`);
+        return response.data;
+    },
+
+    leaveStudyGroup: async (groupId: number, userId: number): Promise<string> => {
+        const response = await api.post(`/study-groups/${groupId}/leave?userId=${userId}`);
+        return response.data;
+    },
+};
+
+export const postAPI = {
+    getPosts: async (groupId: number, userId: number, limit: number = 10, offset: number = 0): Promise<PostResponseDTO[]> => {
+        const response = await api.get(`/study-groups/${groupId}/posts?userId=${userId}&limit=${limit}&offset=${offset}`);
+        return response.data;
+    },
+    createPost: async (groupId: number, userId: number, data: PostCreateRequest): Promise<string> => {
+        const response = await api.post(`/study-groups/${groupId}/posts?userId=${userId}`, data);
+        return response.data;
+    },
+    updatePost: async (groupId: number, userId: number, postId: number, data: PostCreateRequest): Promise<string> => {
+        const response = await api.patch(`/study-groups/${groupId}/posts/${postId}?userId=${userId}`, data);
+        return response.data;
+    },
+    deletePost: async (groupId: number, userId: number, postId: number): Promise<string> => {
+        const response = await api.delete(`/study-groups/${groupId}/posts/${postId}?userId=${userId}`);
         return response.data;
     },
 };

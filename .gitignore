@@ -52,13 +52,13 @@ package-lock.json
 src/frontend/package-lock.json
 build/
 .gradle/
-
+node_modules/
+src/frontend/node_modules/
+.history/
 
 application.properties
 
 # Environment variables
 .env
 
-node_modules/
-src/frontend/node_modules/
-.history/
+

@@ -24,9 +24,8 @@ public interface PostMapper {
 
     @Insert("""
         INSERT INTO posts (group_id, user_id, title, content)
-        VALUES (#{groupId}, #{userId}, #{title}, #{content})
+        VALUES (#{groupId}, #{userId}, #{request.title}, #{request.content})
     """)
-    @Options(useGeneratedKeys = true, keyProperty = "postId")
     void insertPost(Long groupId, Long userId, PostCreateRequest request);
 
     @Insert("""

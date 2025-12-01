@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './NavigationBar.module.css';
 
 interface NavigationBarProps {
   className?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  onSearchSubmit?: (value: string) => void;
 }
 
-const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
+const NavigationBar: React.FC<NavigationBarProps> = ({ className, searchValue, onSearchChange, onSearchSubmit }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userProfile } = useAuth();
+  const { userProfile, logout } = useAuth();
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -28,6 +33,27 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowSettingsDropdown(false);
+      }
+    };
+
+    if (showSettingsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettingsDropdown]);
+
   return (
     <nav className={`${styles.navbar} ${className || ''}`}>
       <div className={styles.navbarContent}>
@@ -42,24 +68,33 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
           
         </div>
 
-        {/* Search Bar */}
-        <div className={styles.searchSection}>
-          <div className={styles.searchWrapper}>
-            <svg 
-              className={styles.searchIcon}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search..."
-              className={styles.searchInput}
-            />
+        {/* Search Bar (only on dashboard routes) */}
+        {location.pathname.startsWith('/dashboard') && (
+          <div className={styles.searchSection}>
+            <div className={styles.searchWrapper}>
+              <svg 
+                className={styles.searchIcon}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search..."
+                className={styles.searchInput}
+                value={searchValue ?? ''}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onSearchSubmit?.(searchValue ?? '');
+                  }
+                }}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Icons */}
         <div className={styles.rightSection}>
@@ -75,17 +110,41 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
             <span className={styles.notificationBadge}></span>
           </button>
           
-          <button className={styles.iconButton}>
-            <svg 
-              className={styles.settingsIcon}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
+          <div className={styles.settingsContainer} ref={dropdownRef}>
+            <button 
+              className={styles.iconButton}
+              onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
+              <svg 
+                className={styles.settingsIcon}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+
+            {showSettingsDropdown && (
+              <div className={styles.settingsDropdown}>
+                <button 
+                  className={styles.dropdownItem}
+                  onClick={handleLogout}
+                >
+                  <svg 
+                    className={styles.dropdownIcon}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
           
           {/* Profile Picture */}
           <button 

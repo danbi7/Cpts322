@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './login.module.css';
-import { authAPI } from '../../services/api';
+import { authAPI, profileAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormData {
@@ -66,10 +66,26 @@ const LoginPage: React.FC = () => {
         password: '',
       });
       
-      // Redirect to dashboard or home page after successful login
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
+      // Check if user has a profile
+      try {
+        const profile = await profileAPI.getProfile();
+        // If profile exists but has no bio (profile not fully created), redirect to profile creation
+        if (!profile || !profile.bio) {
+          setTimeout(() => {
+            navigate('/profile-creation');
+          }, 1500);
+        } else {
+          // Profile exists, go to dashboard
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 1500);
+        }
+      } catch (profileError) {
+        // Profile doesn't exist, redirect to profile creation
+        setTimeout(() => {
+          navigate('/profile-creation');
+        }, 1500);
+      }
       
     } catch (error: any) {
       console.error('Login error:', error);

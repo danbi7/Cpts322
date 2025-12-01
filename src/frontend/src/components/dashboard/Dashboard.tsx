@@ -49,11 +49,14 @@ const Dashboard: React.FC = () => {
         setLoading(true);
         setError('');
         console.log('Fetching study groups with userId:', userId);
+        const isMyGroups = selectedFilter === 'myGroup';
+        const requestPage = isMyGroups ? 1 : currentPage;
+        const requestSize = isMyGroups ? 1000 : 12; // fetch "all" then client-filter for My Groups
         const response = await studyGroupAPI.getStudyGroups(
-          userId, 
-          searchQuery || undefined, 
-          currentPage, 
-          10,
+          userId,
+          searchQuery || undefined,
+          requestPage,
+          requestSize,
           selectedFilter
         );
         let groups = response.groups;
@@ -77,14 +80,19 @@ const Dashboard: React.FC = () => {
           }
         } catch {}
 
-        if (selectedFilter === 'myGroup') {
+        if (isMyGroups) {
           groups = groups.filter(g => g.member);
         }
-        if (selectedFilter === 'myGroup') {
-          groups = groups.filter((g: any) => g.member === true || g.isMember === true);
+        // Defensive: also honor legacy isMember if present
+        if (isMyGroups) {
+          groups = groups.filter((g: any) => g.member === true || (g as any).isMember === true);
         }
         setStudyGroups(groups);
-        setTotalPages(response.pagination.totalPages);
+        if (isMyGroups) {
+          setTotalPages(1);
+        } else {
+          setTotalPages(response.pagination.totalPages);
+        }
       } catch (err: any) {
         console.error('Failed to fetch study groups:', err);
         setError('Failed to load study groups. Please try again.');
@@ -167,17 +175,17 @@ const Dashboard: React.FC = () => {
   return (
     <div className={styles.dashboardContainer}>
       {/* Navigation Bar */}
-      <NavigationBar />
+      <NavigationBar 
+        searchValue={searchQuery}
+        onSearchChange={(v) => setSearchQuery(v)}
+        onSearchSubmit={(v) => {
+          setSearchQuery(v);
+          setCurrentPage(1);
+        }}
+      />
 
       {/* Main Content */}
       <main className={styles.main}>
-        {/* Message Display */}
-        {message && (
-          <div className={`${styles.message} ${styles[`message${messageType.charAt(0).toUpperCase() + messageType.slice(1)}`]}`}>
-            {message}
-          </div>
-        )}
-
         {/* Filter Buttons */}
         <div className={styles.filterButtons}>
           <button

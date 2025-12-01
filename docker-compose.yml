@@ -31,10 +31,6 @@ services:
       SPRING_DATASOURCE_USERNAME: appuser
       SPRING_DATASOURCE_PASSWORD: app1234
       APP_FRONTEND_URL: http://localhost:3000
-    volumes:
-      - ./build/libs:/app/build/libs
-      - ./src/main/resources:/app/src/main/resources
-      - ./src/main:/workspace/backend/src
     depends_on:
       mysql:
         condition: service_healthy
@@ -52,10 +48,7 @@ services:
     container_name: crimson-frontend
     restart: always
     ports:
-      - "3000:3000"
-    volumes:
-      - ./src/frontend:/app
-      - /app/node_modules
+      - "3000:80"
     depends_on:
       - backend
     healthcheck:

@@ -37,6 +37,8 @@ const ProfilePage: React.FC = () => {
     bio: '',
     profileImageUrl: ''
   });
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string>('');
 
   useEffect(() => {
     if (profile) {
@@ -84,12 +86,7 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
-    if (editForm.profileImageUrl && !isValidUrl(editForm.profileImageUrl)) {
-      setMessage('Please enter a valid URL for your profile image.');
-      setMessageType('error');
-      setSaving(false);
-      return;
-    }
+    // If an image file was chosen, it has been validated client-side
     
     try {
       await profileAPI.updateProfile({
@@ -119,14 +116,32 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // Helper function to validate URL
-  const isValidUrl = (url: string): boolean => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
+  // Handle image file selection for editing
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setSelectedImageFile(file);
+    if (!file) {
+      setImagePreviewUrl('');
+      return;
     }
+
+    const isImage = file.type.startsWith('image/');
+    const isSmallEnough = file.size <= 5 * 1024 * 1024;
+    if (!isImage || !isSmallEnough) {
+      setMessage(!isImage ? 'Please select a valid image file.' : 'Image must be 5MB or smaller.');
+      setMessageType('error');
+      setSelectedImageFile(null);
+      setImagePreviewUrl('');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      setImagePreviewUrl(dataUrl);
+      setEditForm(prev => ({ ...prev, profileImageUrl: dataUrl }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -277,15 +292,37 @@ const ProfilePage: React.FC = () => {
 
             {isEditing && (
               <div className={styles.formField}>
-                <label className={styles.formLabel}>Profile Image URL</label>
-                <input
-                  type="url"
-                  name="profileImageUrl"
-                  value={editForm.profileImageUrl}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                  placeholder="https://example.com/image.jpg"
-                />
+                <label className={styles.formLabel}>Profile Image</label>
+                <div className={styles.fileUploadRow}>
+                  <input
+                    type="file"
+                    id="editProfileImageFile"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className={styles.fileInputHidden}
+                  />
+                  <label htmlFor="editProfileImageFile" className={styles.uploadButton}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    {selectedImageFile ? 'Change Image' : 'Choose Image'}
+                  </label>
+                  <div className={styles.uploadMeta}>
+                    <span className={styles.fileName}>{selectedImageFile ? selectedImageFile.name : 'No file chosen'}</span>
+                    <span className={styles.uploadHint}>PNG, JPG up to 5MB</span>
+                  </div>
+                </div>
+                {(imagePreviewUrl || editForm.profileImageUrl) && (
+                  <div className={styles.imagePreviewWrapper}>
+                    <img 
+                      src={imagePreviewUrl || editForm.profileImageUrl} 
+                      alt="Profile preview" 
+                      className={styles.imagePreview}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

@@ -126,6 +126,7 @@
   font-weight: 500;
   color: #374151;
   margin-bottom: 0.5rem;
+  font-family: inherit;
 }
 
 .formInput {
@@ -136,6 +137,7 @@
   font-size: 0.875rem;
   background: white;
   transition: border-color 0.15s ease;
+  font-family: inherit;
 }
 
 .formInput:focus {
@@ -154,12 +156,78 @@
   resize: vertical;
   min-height: 100px;
   transition: border-color 0.15s ease;
+  font-family: inherit;
 }
 
 .formTextarea:focus {
   outline: none;
   border-color: #dc2626;
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* File upload UI */
+.fileUploadRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileInputHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uploadButton:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.uploadMeta {
+  display: flex;
+  flex-direction: column;
+}
+
+.fileName {
+  font-size: 13px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.uploadHint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.imagePreviewWrapper {
+  margin-top: 12px;
+}
+
+.imagePreview {
+  max-width: 200px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 /* Action Buttons */
@@ -179,6 +247,7 @@
   font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
+  font-family: inherit;
 }
 
 .primaryButton:hover {
@@ -200,6 +269,7 @@
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.15s ease;
+  font-family: inherit;
 }
 
 .secondaryButton:hover {

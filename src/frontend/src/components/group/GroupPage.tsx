@@ -1,39 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import NavigationBar from '../NavigationBar';
-import { studyGroupAPI, StudyGroupResponse, JoinRequestProfile } from '../../services/api';
+import { studyGroupAPI, StudyGroupResponse, JoinRequestProfile, postAPI, PostResponseDTO } from '../../services/api';
 import styles from './groupPage.module.css';
 
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  author: string;
-  authorAvatar: string;
-  timestamp: Date;
-  upvotes: number;
-  downvotes: number;
-  comments: Comment[];
-  isUpvoted: boolean;
-  isDownvoted: boolean;
-}
-
-interface Comment {
-  id: number;
-  content: string;
-  author: string;
-  authorAvatar: string;
-  timestamp: Date;
-  upvotes: number;
-  isUpvoted: boolean;
-  replies?: Comment[];
-}
+interface Post extends PostResponseDTO {}
 
 const GroupPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const { userId, userProfile } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [postLoading, setPostLoading] = useState(false);
   const [newPost, setNewPost] = useState({ title: '', content: '' });
   const [showNewPost, setShowNewPost] = useState(false);
   const [groupInfo, setGroupInfo] = useState<StudyGroupResponse | null>(null);
@@ -42,6 +21,12 @@ const GroupPage: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [joinRequests, setJoinRequests] = useState<JoinRequestProfile[]>([]);
   const [actionMessage, setActionMessage] = useState<string>('');
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [showEditPostModal, setShowEditPostModal] = useState<boolean>(false);
+  const [showDeletePostModal, setShowDeletePostModal] = useState<boolean>(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
+  const [editPostData, setEditPostData] = useState({ title: '', content: '' });
 
   // Fetch group data from API
   useEffect(() => {
@@ -103,145 +88,136 @@ const GroupPage: React.FC = () => {
     }
   };
 
-  // Mock posts data - TODO: Replace with real posts API when available
+  const handleLeaveGroup = async () => {
+    if (!groupId || !userId) return;
+    setActionMessage('');
+    try {
+      const message = await studyGroupAPI.leaveStudyGroup(parseInt(groupId), userId);
+      // Redirect to dashboard after successfully leaving
+      navigate('/dashboard');
+    } catch (err: any) {
+      const backendMsg = err?.response?.data;
+      setActionMessage(typeof backendMsg === 'string' && backendMsg ? backendMsg : 'Failed to leave group.');
+    }
+  };
+
+  const handleDeleteGroup = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteGroup = async () => {
+    if (!groupId || !userId) return;
+    
+    setShowDeleteModal(false);
+    setActionMessage('');
+    try {
+      const message = await studyGroupAPI.deleteStudyGroup(parseInt(groupId), userId);
+      // Redirect to dashboard after successfully deleting
+      navigate('/dashboard');
+    } catch (err: any) {
+      const backendMsg = err?.response?.data;
+      setActionMessage(typeof backendMsg === 'string' && backendMsg ? backendMsg : 'Failed to delete group.');
+    }
+  };
+
+  const handleUpdateGroup = () => {
+    if (!groupId) return;
+    navigate(`/update-group/${groupId}`);
+  };
+
+  // Load posts
   useEffect(() => {
-    const mockPosts: Post[] = [
-      {
-        id: 1,
-        title: "Big O Notation Study Guide",
-        content: "I've created a comprehensive guide on Big O notation with examples from our recent lectures. This covers best case, average case, and worst case scenarios with visual examples. Let me know if you have questions!",
-        author: "Sarah Johnson",
-        authorAvatar: "SJ",
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        upvotes: 15,
-        downvotes: 2,
-        isUpvoted: false,
-        isDownvoted: false,
-        comments: [
-          {
-            id: 1,
-            content: "This is amazing! The visual examples really helped me understand the concepts",
-            author: "Mike Chen",
-            authorAvatar: "MC",
-            timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-            upvotes: 8,
-            isUpvoted: false
-          },
-          {
-            id: 2,
-            content: "Thanks for sharing! Can you add more examples for sorting algorithms?",
-            author: "Alex Kim",
-            authorAvatar: "AK",
-            timestamp: new Date(Date.now() - 30 * 60 * 1000),
-            upvotes: 5,
-            isUpvoted: false
-          }
-        ]
-      },
-      {
-        id: 2,
-        title: "Study group for final exam - who's in?",
-        content: "Planning to meet at the library this Saturday 2pm. Bring your notes and we'll go through all the topics together. We'll focus on algorithms, design patterns, and system design.",
-        author: "Group Leader",
-        authorAvatar: "GL",
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        upvotes: 23,
-        downvotes: 1,
-        isUpvoted: true,
-        isDownvoted: false,
-        comments: [
-          {
-            id: 3,
-            content: "I'm in! Should I bring my laptop?",
-            author: "Tech Student",
-            authorAvatar: "TS",
-            timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-            upvotes: 3,
-            isUpvoted: false
-          }
-        ]
+    const loadPosts = async () => {
+      if (!groupId || !userId) return;
+      setPostLoading(true);
+      try {
+        const data = await postAPI.getPosts(parseInt(groupId), userId, 20, 0);
+        setPosts(data as Post[]);
+      } catch {}
+      finally {
+        setPostLoading(false);
       }
-    ];
-    setPosts(mockPosts);
-  }, []);
+    };
+    loadPosts();
+  }, [groupId, userId]);
 
-  const handleVote = (postId: number, type: 'upvote' | 'downvote') => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        const newPost = { ...post };
+  // Voting not implemented
 
-        if (type === 'upvote') {
-          if (newPost.isUpvoted) {
-            newPost.upvotes--;
-            newPost.isUpvoted = false;
-          } else {
-            if (newPost.isDownvoted) {
-              newPost.downvotes--;
-              newPost.isDownvoted = false;
-            }
-            newPost.upvotes++;
-            newPost.isUpvoted = true;
-          }
-        } else {
-          if (newPost.isDownvoted) {
-            newPost.downvotes--;
-            newPost.isDownvoted = false;
-          } else {
-            if (newPost.isUpvoted) {
-              newPost.upvotes--;
-              newPost.isUpvoted = false;
-            }
-            newPost.downvotes++;
-            newPost.isDownvoted = true;
-          }
-        }
+  // Comment voting not implemented
 
-        return newPost;
-      }
-      return post;
-    }));
-  };
-
-  const handleCommentVote = (postId: number, commentId: number) => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          comments: post.comments.map(comment => {
-            if (comment.id === commentId) {
-              return {
-                ...comment,
-                upvotes: comment.isUpvoted ? comment.upvotes - 1 : comment.upvotes + 1,
-                isUpvoted: !comment.isUpvoted
-              };
-            }
-            return comment;
-          })
-        };
-      }
-      return post;
-    }));
-  };
-
-  const handleSubmitPost = (e: React.FormEvent) => {
+  const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!groupId || !userId) return;
     if (newPost.title.trim() && newPost.content.trim()) {
-      const post: Post = {
-        id: Date.now(),
-        title: newPost.title,
-        content: newPost.content,
-        author: userProfile?.firstName + ' ' + userProfile?.lastName || 'Anonymous',
-        authorAvatar: userProfile ? `${userProfile.firstName.charAt(0)}${userProfile.lastName.charAt(0)}` : 'A',
-        timestamp: new Date(),
-        upvotes: 0,
-        downvotes: 0,
-        isUpvoted: false,
-        isDownvoted: false,
-        comments: []
-      };
-      setPosts([post, ...posts]);
-      setNewPost({ title: '', content: '' });
-      setShowNewPost(false);
+      try {
+        await postAPI.createPost(parseInt(groupId), userId, { title: newPost.title.trim(), content: newPost.content.trim() });
+        const data = await postAPI.getPosts(parseInt(groupId), userId, 20, 0);
+        setPosts(data as Post[]);
+        setNewPost({ title: '', content: '' });
+        setShowNewPost(false);
+        setActionMessage('Post created successfully!');
+        setTimeout(() => setActionMessage(''), 3000);
+      } catch (error: any) {
+        console.error('Failed to create post:', error);
+        const errorMsg = error?.response?.data || error?.message || 'Failed to create post. Please try again.';
+        setActionMessage(errorMsg);
+        setTimeout(() => setActionMessage(''), 5000);
+      }
+    }
+  };
+
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post);
+    setEditPostData({ title: post.title, content: post.content });
+    setShowEditPostModal(true);
+  };
+
+  const handleSubmitEditPost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!groupId || !userId || !editingPost) return;
+    if (editPostData.title.trim() && editPostData.content.trim()) {
+      try {
+        await postAPI.updatePost(parseInt(groupId), userId, editingPost.postId, { 
+          title: editPostData.title.trim(), 
+          content: editPostData.content.trim() 
+        });
+        const data = await postAPI.getPosts(parseInt(groupId), userId, 20, 0);
+        setPosts(data as Post[]);
+        setEditPostData({ title: '', content: '' });
+        setShowEditPostModal(false);
+        setEditingPost(null);
+        setActionMessage('Post updated successfully!');
+        setTimeout(() => setActionMessage(''), 3000);
+      } catch (error: any) {
+        console.error('Failed to update post:', error);
+        const errorMsg = error?.response?.data || error?.message || 'Failed to update post. Please try again.';
+        setActionMessage(errorMsg);
+        setTimeout(() => setActionMessage(''), 5000);
+      }
+    }
+  };
+
+  const handleDeletePostClick = (postId: number) => {
+    setDeletingPostId(postId);
+    setShowDeletePostModal(true);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!groupId || !userId || !deletingPostId) return;
+    
+    setShowDeletePostModal(false);
+    setActionMessage('');
+    try {
+      await postAPI.deletePost(parseInt(groupId), userId, deletingPostId);
+      const data = await postAPI.getPosts(parseInt(groupId), userId, 20, 0);
+      setPosts(data as Post[]);
+      setDeletingPostId(null);
+      setActionMessage('Post deleted successfully!');
+      setTimeout(() => setActionMessage(''), 3000);
+    } catch (error: any) {
+      const errorMsg = error?.response?.data || error?.message || 'Failed to delete post. Please try again.';
+      setActionMessage(errorMsg);
+      setTimeout(() => setActionMessage(''), 5000);
     }
   };
 
@@ -342,11 +318,11 @@ const GroupPage: React.FC = () => {
                   {(() => {
                     if (groupInfo.member) {
                       return (
-                        <button className={styles.followingButton} disabled>
+                        <button className={styles.followingButton} onClick={handleLeaveGroup}>
                           <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 00-15 0v5h5l-5 5-5-5h5v-5a7.5 7.5 0 0115 0v5z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
-                          Member
+                          Leave Group
                         </button>
                       );
                     }
@@ -389,9 +365,7 @@ const GroupPage: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   <div className={styles.activityContent}>
-                    <div className={styles.activityNumber}>
-                      {posts.reduce((total, post) => total + post.comments.length, 0)}
-                    </div>
+                    <div className={styles.activityNumber}>0</div>
                     <div className={styles.activityLabel}>Comments</div>
                   </div>
                 </div>
@@ -441,22 +415,36 @@ const GroupPage: React.FC = () => {
                 </div>
 
                 {/* Posts */}
-                {posts.map((post) => (
-                  <div key={post.id} className={styles.postCard}>
+                {postLoading ? (
+                  <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>Loading posts...</p></div>
+                ) : posts.map((post) => (
+                  <div key={post.postId} className={styles.postCard}>
                     <div className={styles.postHeader}>
                       <div className={styles.postAuthor}>
-                        <div className={styles.authorAvatar}>{post.authorAvatar}</div>
+                        <div className={styles.authorAvatar}>{userProfile ? `${userProfile.firstName.charAt(0)}${userProfile.lastName.charAt(0)}` : 'A'}</div>
                         <div className={styles.authorInfo}>
-                          <div className={styles.authorName}>{post.author}</div>
-                          <div className={styles.postTime}>{formatTimeAgo(post.timestamp)}</div>
+                          <div className={styles.authorName}>{userProfile?.firstName} {userProfile?.lastName}</div>
+                          <div className={styles.postTime}>{formatTimeAgo(new Date(post.createdAt))}</div>
                         </div>
                       </div>
                       <div className={styles.postActions}>
-                        <button className={styles.pinButton}>
-                          <svg className={styles.pinIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        <button 
+                          className={styles.editButton}
+                          onClick={() => handleEditPost(post)}
+                          title="Edit post"
+                        >
+                          <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
-                          Pinned
+                        </button>
+                        <button 
+                          className={styles.deleteButton}
+                          onClick={() => handleDeletePostClick(post.postId)}
+                          title="Delete post"
+                        >
+                          <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </button>
                       </div>
                     </div>
@@ -468,59 +456,14 @@ const GroupPage: React.FC = () => {
                     
                     <div className={styles.postFooter}>
                       <div className={styles.voteButtons}>
-                        <button 
-                          className={`${styles.voteButton} ${post.isUpvoted ? styles.voted : ''}`}
-                          onClick={() => handleVote(post.id, 'upvote')}
-                        >
-                          <svg className={styles.voteIcon} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                          </svg>
-                          {post.upvotes}
-                        </button>
-                        <button 
-                          className={`${styles.voteButton} ${post.isDownvoted ? styles.voted : ''}`}
-                          onClick={() => handleVote(post.id, 'downvote')}
-                        >
-                          <svg className={styles.voteIcon} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                          {post.downvotes}
-                        </button>
+                        <span className={styles.voteButton}>Views: {post.viewCount}</span>
+                        <span className={styles.voteButton}>Likes: {post.likeCount}</span>
                       </div>
                       
-                      <div className={styles.commentButton}>
-                        <svg className={styles.commentIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        {post.comments.length} comments
-                      </div>
+                      <div className={styles.commentButton}>Comments not yet implemented</div>
                     </div>
                     
-                    {/* Comments */}
-                    {post.comments.length > 0 && (
-                      <div className={styles.commentsSection}>
-                        {post.comments.map((comment) => (
-                          <div key={comment.id} className={styles.comment}>
-                            <div className={styles.commentHeader}>
-                              <div className={styles.commentAuthorAvatar}>{comment.authorAvatar}</div>
-                              <div className={styles.commentAuthor}>{comment.author}</div>
-                              <div className={styles.commentTime}>
-                                {formatTimeAgo(comment.timestamp)}
-                              </div>
-                            </div>
-                            <div className={styles.commentContent}>{comment.content}</div>
-                            <div className={styles.commentActions}>
-                              <button 
-                                className={`${styles.commentVote} ${comment.isUpvoted ? styles.commentVoted : ''}`}
-                                onClick={() => handleCommentVote(post.id, comment.id)}
-                              >
-                                ▲ {comment.upvotes}
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {/* Comments removed for now */}
                   </div>
                 ))}
               </div>
@@ -548,7 +491,7 @@ const GroupPage: React.FC = () => {
                               </div>
                               <div>
                                 <div className={styles.requestName}>{r.firstName} {r.lastName}</div>
-                                <div className={styles.requestMeta}>{r.email} {r.nickname ? `• ${r.nickname}` : ''}</div>
+                                <div className={styles.requestMeta}>{r.nickname ? `• ${r.nickname}` : ''}</div>
                               </div>
                             </div>
                             <div className={styles.requestActions}>
@@ -562,7 +505,6 @@ const GroupPage: React.FC = () => {
                                     const updated = await studyGroupAPI.getJoinRequests(parseInt(groupId), userId);
                                     setJoinRequests(updated);
                                   } catch (e: any) {
-                                    // Intentionally no on-screen message for approve per request
                                   }
                                 }}
                               >
@@ -578,7 +520,6 @@ const GroupPage: React.FC = () => {
                                     const updated = await studyGroupAPI.getJoinRequests(parseInt(groupId), userId);
                                     setJoinRequests(updated);
                                   } catch (e: any) {
-                                    // Intentionally no on-screen message for reject per request
                                   }
                                 }}
                               >
@@ -589,6 +530,26 @@ const GroupPage: React.FC = () => {
                         ))}
                       </ul>
                     )}
+                    <div className={styles.groupManagementActions}>
+                      <button 
+                        className={styles.updateGroupButton} 
+                        onClick={handleUpdateGroup}
+                      >
+                        <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Update Group
+                      </button>
+                      <button 
+                        className={styles.deleteGroupButton} 
+                        onClick={handleDeleteGroup}
+                      >
+                        <svg className={styles.actionIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete Group
+                      </button>
+                    </div>
                   </div>
                 )}
                 {/* About Section */}
@@ -643,6 +604,7 @@ const GroupPage: React.FC = () => {
                     <p>No upcoming events scheduled</p>
                   </div>
                 </div>
+
               </div>
             </div>
 
@@ -675,6 +637,112 @@ const GroupPage: React.FC = () => {
                         <button type="submit" className={styles.submitButton}>Post</button>
                       </div>
                     </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Group Confirmation Modal */}
+            {showDeleteModal && (
+              <div className={styles.modalOverlay} onClick={() => setShowDeleteModal(false)}>
+                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.modalContent}>
+                    <h3 className={styles.modalTitle}>Delete Group</h3>
+                    <p style={{ marginBottom: '1.5rem', color: '#6c757d', lineHeight: '1.6' }}>
+                      Are you sure you want to delete this group? This action cannot be undone. All posts, members, and data associated with this group will be permanently deleted.
+                    </p>
+                    <div className={styles.modalActions}>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowDeleteModal(false)} 
+                        className={styles.cancelButton}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={confirmDeleteGroup} 
+                        className={styles.submitButton}
+                      >
+                        Delete Group
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Edit Post Modal */}
+            {showEditPostModal && editingPost && (
+              <div className={styles.modalOverlay} onClick={() => setShowEditPostModal(false)}>
+                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.modalContent}>
+                    <h3 className={styles.modalTitle}>Edit Post</h3>
+                    <form onSubmit={handleSubmitEditPost}>
+                      <input
+                        type="text"
+                        placeholder="Post title..."
+                        value={editPostData.title}
+                        onChange={(e) => setEditPostData({...editPostData, title: e.target.value})}
+                        className={styles.modalInput}
+                        required
+                      />
+                      <textarea
+                        placeholder="What's on your mind?"
+                        value={editPostData.content}
+                        onChange={(e) => setEditPostData({...editPostData, content: e.target.value})}
+                        className={styles.modalTextarea}
+                        required
+                      />
+                      <div className={styles.modalActions}>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setShowEditPostModal(false);
+                            setEditingPost(null);
+                            setEditPostData({ title: '', content: '' });
+                          }} 
+                          className={styles.cancelButton}
+                        >
+                          Cancel
+                        </button>
+                        <button type="submit" className={styles.submitButton}>Update</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Post Confirmation Modal */}
+            {showDeletePostModal && (
+              <div className={styles.modalOverlay} onClick={() => setShowDeletePostModal(false)}>
+                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.modalContent}>
+                    <h3 className={styles.modalTitle}>Delete Post</h3>
+                    <p style={{ marginBottom: '1.5rem', color: '#6c757d', lineHeight: '1.6' }}>
+                      Are you sure you want to delete this post? This action cannot be undone.
+                    </p>
+                    <div className={styles.modalActions}>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setShowDeletePostModal(false);
+                          setDeletingPostId(null);
+                        }} 
+                        className={styles.cancelButton}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={confirmDeletePost} 
+                        className={styles.submitButton}
+                        style={{ backgroundColor: '#dc3545' }}
+                      >
+                        Delete Post
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

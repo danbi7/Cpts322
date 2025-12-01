@@ -17,8 +17,8 @@ public class PostService {
     private final PostMapper postMapper;
     private final FileService fileService;
 
-    public boolean isGroupMember(Long groupId, Long postId) {
-        return postMapper.isGroupMember(groupId, postId);
+    public boolean isGroupMember(Long groupId, Long userId) {
+        return postMapper.isGroupMember(groupId, userId);
     }
 
     public boolean isAuthor(Long userId, Long postId) {
@@ -27,7 +27,10 @@ public class PostService {
 
     @Transactional
     public String createPost(Long groupId, Long userId, PostCreateRequest request){
-        if(!isGroupMember(groupId, userId)){
+        boolean isMember = isGroupMember(groupId, userId);
+        System.out.println("DEBUG: groupId=" + groupId + ", userId=" + userId + ", isMember=" + isMember);
+        
+        if(!isMember){
             return "You do not have permission to add this post";
         }
 

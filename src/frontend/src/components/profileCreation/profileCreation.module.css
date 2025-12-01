@@ -11,16 +11,17 @@
 }
 
 .profileContainer {
-  background: white;
-  border-radius: 10px;
+  background: #FFFFFF;
+  border-radius: 16px;
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  padding: 40px 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  padding: 32px 28px;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+  border: 1px solid #eceff3;
   width: 100%;
-  max-width: 600px;
+  max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -38,17 +39,17 @@
 }
 
 .title {
-  color: #373B43;
-  margin-bottom: 10px;
+  color: #111827;
+  margin: 0 0 6px 0;
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
   text-align: center;
 }
 
 .subtitle {
-  color: #666;
-  margin-bottom: 30px;
-  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 24px;
+  font-size: 0.975rem;
   text-align: center;
 }
 
@@ -70,27 +71,27 @@
 .profileForm {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px;
 }
 
 .formSection {
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  padding: 20px;
-  background: #FAFAFA;
+  border: 1px solid #ECEFF3;
+  border-radius: 12px;
+  padding: 16px;
+  background: #FFFFFF;
 }
 
 .sectionTitle {
-  color: #373B43;
-  font-size: 1.1rem;
+  color: #111827;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #E11134;
+  margin: 0 0 12px 0;
   padding-bottom: 8px;
+  border-bottom: 1px solid #ECEFF3;
 }
 
 .formGroup {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .formRow {
@@ -101,10 +102,10 @@
 
 .label {
   display: block;
-  margin-bottom: 8px;
-  color: #374151;
-  font-weight: 500;
-  font-size: 14px;
+  margin-bottom: 6px;
+  color: #111827;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .required {
@@ -114,18 +115,19 @@
 
 .input, .select, .textarea {
   width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #D6DCEC;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
   font-size: 14px;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
+  background: #fff;
 }
 
 .input:focus, .select:focus, .textarea:focus {
   outline: none;
   border-color: #E11134;
-  box-shadow: 0 0 0 3px rgba(225, 17, 52, 0.1);
+  box-shadow: 0 0 0 3px rgba(225, 17, 52, 0.08);
 }
 
 .textarea {
@@ -142,31 +144,84 @@
 .createButton {
   background: linear-gradient(to bottom right, #E11134 0%, #F70303 100%);
   box-shadow: 
-    0 4px 15px rgba(222, 62, 62, 0.4),
+    0 4px 14px rgba(222, 62, 62, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  color: white;
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+  color: #fff;
   border: none;
-  padding: 15px 30px;
+  padding: 14px 24px;
   border-radius: 12px;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   width: 100%;
-  transition: all 0.3s ease;
-  margin-top: 10px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  margin-top: 8px;
 }
 
 .createButton:hover {
-  background: linear-gradient(to bottom right, #a20520 0%, #F70303 100%);
+  background: linear-gradient(to bottom right, #b90f2b 0%, #df0303 100%);
   box-shadow: 
-    0 6px 20px rgba(222, 62, 62, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 6px 18px rgba(222, 62, 62, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
   transform: translateY(-1px);
 }
 
 .createButton:active {
   transform: translateY(0);
+}
+
+/* Subtle dividers and hint text */
+.divider {
+  height: 1px;
+  background: #ECEFF3;
+  margin: 12px 0;
+}
+
+.hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Primary Button (unified style) */
+.primaryButton {
+  background: linear-gradient(to bottom right, #E11134 0%, #F70303 100%);
+  box-shadow:
+    0 4px 15px rgba(222, 62, 62, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+  color: #fff;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  margin-top: 8px;
+}
+
+.primaryButton:hover {
+  background: linear-gradient(to bottom right, #b90f2b 0%, #df0303 100%);
+  box-shadow:
+    0 6px 20px rgba(222, 62, 62, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+  box-shadow:
+    0 3px 10px rgba(222, 62, 62, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.primaryButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .message {
@@ -187,6 +242,71 @@
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
+}
+
+/* File Upload */
+.fileUpload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileInputHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  color: #374151;
+  border: 1px solid #D6DCEC;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uploadButton:hover {
+  background: #f9fafb;
+  border-color: #cfd6ea;
+}
+
+.uploadMeta {
+  display: flex;
+  flex-direction: column;
+}
+
+.fileName {
+  font-size: 13px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.uploadHint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.imagePreviewWrapper {
+  margin-top: 12px;
+}
+
+.imagePreview {
+  max-width: 200px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 @media (max-width: 768px) {
