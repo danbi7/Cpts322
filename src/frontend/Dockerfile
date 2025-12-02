@@ -18,17 +18,15 @@ RUN rm -rf ./*
 
 COPY --from=builder /app/build .
 
-RUN echo 'server { \
-    listen 80; \
-    server_name localhost; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+RUN mkdir -p /etc/nginx/templates
+RUN printf 'server {\n\
+    listen ${PORT};\n\
+    server_name localhost;\n\
+    root /usr/share/nginx/html;\n\
+    index index.html;\n\
+    location / {\n\
+        try_files $uri $uri/ /index.html;\n\
+    }\n\
+}\n' > /etc/nginx/templates/default.conf.template
 
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
-
+CMD ["sh", "-c", "envsubst '$PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

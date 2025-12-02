@@ -1,20 +1,22 @@
-FROM gradle:8-jdk17 AS builder
+FROM gradle:8.9-jdk17 AS builder
 WORKDIR /app
 
-COPY gradlew .
 COPY gradle gradle
-COPY build.gradle settings.gradle ./
+COPY build.gradle settings.gradle gradlew gradlew.bat ./
+RUN chmod +x gradlew && ./gradlew dependencies --no-daemon || true
 
 COPY src src
+RUN ./gradlew bootJar --no-daemon
 
-RUN ./gradlew clean build -x test
-
-FROM eclipse-temurin:17-jre
+FROM amazoncorretto:17-alpine
 WORKDIR /app
+
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring
 
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 ENV PORT=8080
-EXPOSE $PORT
+EXPOSE ${PORT}
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT} -jar /app/app.jar"]
