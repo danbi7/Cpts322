@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://crimson-connect-production-9cee.up.railway.app';
+const API_BASE_URL = 'https://crimson-connect-production-9cee.up.railway.app/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
