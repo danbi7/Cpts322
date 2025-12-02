@@ -12,9 +12,12 @@ public class EmailService{
 
     public void sendEmail(String toEmail, String token) {
         String subject = "Verify your email - Crimson Connect";
-        String verificationUrl = "http://localhost:8080/api/auth/verify?token=" + token;
+        String verificationUrl = "http://localhost:3000/verify-email?token=" + token;
 
-        String message = "Click the link to verify your email:\n" + verificationUrl;
+        String message = "Welcome to Crimson Connect!\n\n" +
+                        "Click the link below to verify your email:\n\n" +
+                        verificationUrl + "\n\n" +
+                        "This link expires in 24 hours.";
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(toEmail);
@@ -27,7 +30,10 @@ public class EmailService{
         String subject = "Password Reset - Crimson Connect";
         String resetUrl = "http://localhost:3000/reset-password?token=" + token;
 
-        String message = "Click the link below to reset your password:\n" + resetUrl;
+        String message = "Click the link below to reset your password:\n\n" +
+                        resetUrl + "\n\n" +
+                        "This link expires in 1 hour.\n\n" +
+                        "Didn't request this? Ignore this email.";
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(toEmail);

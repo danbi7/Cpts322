@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { profileAPI } from '../../services/api';
+import { profileAPI, ProfileResponse } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './profileCreation.module.css';
@@ -95,14 +95,25 @@ const ProfileCreation: React.FC = () => {
         profileImageUrl: formData.profileImageUrl.trim()
       });
 
-      // Refresh the profile in AuthContext for NavigationBar
-      await refreshProfile();
+      // Refresh the profile in AuthContext and verify it loaded
+      console.log('ProfileCreation: Refreshing profile...');
+      const updatedProfile: ProfileResponse | null = await refreshProfile();
+      console.log('ProfileCreation: Updated profile:', updatedProfile);
+
+      if (!updatedProfile || !updatedProfile.bio) {
+        setMessage('Profile created, but failed to load. Please refresh the page.');
+        setMessageType('error');
+        setIsSubmitting(false);
+        return;
+      }
 
       setMessage(`Profile created successfully! ${response}`);
       setMessageType('success');
 
-      // Navigate to dashboard after successful creation
-      navigate('/dashboard');
+      // Small delay to ensure context updates before navigation
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 200);
       
     } catch (error: any) {
       console.error('Failed to create profile:', error);

@@ -267,9 +267,9 @@ const ProfilePage: React.FC = () => {
                   placeholder="Enter your nickname"
                 />
               ) : (
-                <div className={styles.formInput}>
+                <p className={styles.displayText}>
                   {profile.nickname || 'No nickname set'}
-                </div>
+                </p>
               )}
             </div>
 
@@ -284,9 +284,9 @@ const ProfilePage: React.FC = () => {
                   placeholder="Tell us about yourself..."
                 />
               ) : (
-                <div className={styles.formTextarea}>
+                <p className={styles.displayText}>
                   {profile.bio || 'No bio available'}
-                </div>
+                </p>
               )}
             </div>
 
@@ -351,17 +351,6 @@ const ProfilePage: React.FC = () => {
                 </>
               )}
             </div>
-
-            {/* Logout Button */}
-            <button 
-              className={styles.logoutButton} 
-              onClick={() => {
-                logout();
-                window.location.href = '/login';
-              }}
-            >
-              Logout
-            </button>
           </div>
 
           {/* Profile Details Column */}

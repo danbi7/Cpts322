@@ -11,7 +11,7 @@ interface LoginFormData {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, userProfile } = useAuth();
   
   React.useEffect(() => {
     document.body.classList.add('login-active');
@@ -22,9 +22,15 @@ const LoginPage: React.FC = () => {
   
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      // If user is authenticated but has no profile, go to profile creation
+      if (!userProfile || !userProfile.bio) {
+        navigate('/profile-creation');
+      } else {
+        // Otherwise go to dashboard
+        navigate('/dashboard');
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, userProfile, navigate]);
   
   // Form data state
   const [formData, setFormData] = useState<LoginFormData>({

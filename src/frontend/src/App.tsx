@@ -8,6 +8,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import ForgotPasswordPage from './components/forgotPassword/forgotPassword';
 import ResetPasswordPage from './components/resetPassword/resetPassword';
+import VerifyEmailPage from './components/verifyEmail/VerifyEmail';
 import GroupPage from './components/group/GroupPage';
 import ProfilePage from './components/profile/ProfilePage';
 import ProfileCreation from './components/profileCreation/ProfileCreation';
@@ -23,9 +24,17 @@ function App() {
             <Route path="/" element={<SignupPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-            <Route path="/profile-creation" element={<ProfileCreation />} />
+            <Route 
+              path="/profile-creation" 
+              element={
+                <ProtectedRoute requireProfile={false}>
+                  <ProfileCreation />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route 
               path="/dashboard" 
               element={

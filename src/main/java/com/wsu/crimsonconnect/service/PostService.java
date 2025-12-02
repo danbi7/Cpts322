@@ -28,7 +28,6 @@ public class PostService {
     @Transactional
     public String createPost(Long groupId, Long userId, PostCreateRequest request){
         boolean isMember = isGroupMember(groupId, userId);
-        System.out.println("DEBUG: groupId=" + groupId + ", userId=" + userId + ", isMember=" + isMember);
         
         if(!isMember){
             return "You do not have permission to add this post";

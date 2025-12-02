@@ -22,4 +22,8 @@ public class Post {
     private LocalDateTime updatedAt;
     private List<PostImage> images;
     private List<Comment> comments;
+    
+    // Author information
+    private String username;
+    private String userProfileImage;
 }

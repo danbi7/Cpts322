@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import NavigationBar from '../NavigationBar';
-import { studyGroupAPI, StudyGroupResponse, JoinRequestProfile, postAPI, PostResponseDTO } from '../../services/api';
+import { studyGroupAPI, StudyGroupResponse, JoinRequestProfile, postAPI, PostResponseDTO, commentAPI, CommentResponse } from '../../services/api';
 import styles from './groupPage.module.css';
 
 interface Post extends PostResponseDTO {}
@@ -27,6 +27,12 @@ const GroupPage: React.FC = () => {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
   const [editPostData, setEditPostData] = useState({ title: '', content: '' });
+  
+  // Comment states
+  const [comments, setComments] = useState<{ [postId: number]: CommentResponse[] }>({});
+  const [showComments, setShowComments] = useState<{ [postId: number]: boolean }>({});
+  const [newComment, setNewComment] = useState<{ [postId: number]: string }>({});
+  const [replyingTo, setReplyingTo] = useState<{ [postId: number]: { userId: number; username: string } | null }>({});
 
   // Fetch group data from API
   useEffect(() => {
@@ -155,8 +161,6 @@ const GroupPage: React.FC = () => {
         setPosts(data as Post[]);
         setNewPost({ title: '', content: '' });
         setShowNewPost(false);
-        setActionMessage('Post created successfully!');
-        setTimeout(() => setActionMessage(''), 3000);
       } catch (error: any) {
         console.error('Failed to create post:', error);
         const errorMsg = error?.response?.data || error?.message || 'Failed to create post. Please try again.';
@@ -186,8 +190,6 @@ const GroupPage: React.FC = () => {
         setEditPostData({ title: '', content: '' });
         setShowEditPostModal(false);
         setEditingPost(null);
-        setActionMessage('Post updated successfully!');
-        setTimeout(() => setActionMessage(''), 3000);
       } catch (error: any) {
         console.error('Failed to update post:', error);
         const errorMsg = error?.response?.data || error?.message || 'Failed to update post. Please try again.';
@@ -212,13 +214,82 @@ const GroupPage: React.FC = () => {
       const data = await postAPI.getPosts(parseInt(groupId), userId, 20, 0);
       setPosts(data as Post[]);
       setDeletingPostId(null);
-      setActionMessage('Post deleted successfully!');
-      setTimeout(() => setActionMessage(''), 3000);
     } catch (error: any) {
       const errorMsg = error?.response?.data || error?.message || 'Failed to delete post. Please try again.';
       setActionMessage(errorMsg);
       setTimeout(() => setActionMessage(''), 5000);
     }
+  };
+
+  // Comment handlers
+  const toggleComments = async (postId: number) => {
+    const isShowing = showComments[postId];
+    setShowComments({ ...showComments, [postId]: !isShowing });
+    
+    // Load comments if not already loaded and we're opening the section
+    if (!isShowing && !comments[postId]) {
+      try {
+        const commentsData = await commentAPI.getComments(postId);
+        setComments({ ...comments, [postId]: commentsData });
+      } catch (error) {
+        console.error('Failed to load comments:', error);
+      }
+    }
+  };
+
+  const handleSubmitComment = async (postId: number, e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!userId) return;
+    
+    const content = newComment[postId]?.trim();
+    if (!content) return;
+
+    try {
+      const replyTo = replyingTo[postId];
+      await commentAPI.createComment(postId, {
+        content,
+        replyingToUserId: replyTo?.userId,
+      });
+      
+      // Reload comments
+      const commentsData = await commentAPI.getComments(postId);
+      setComments({ ...comments, [postId]: commentsData });
+      
+      // Clear input and reply state
+      setNewComment({ ...newComment, [postId]: '' });
+      setReplyingTo({ ...replyingTo, [postId]: null });
+
+    } catch (error: any) {
+      console.error('Failed to create comment:', error);
+      const errorMsg = error?.response?.data || error?.message || 'Failed to add comment. Please try again.';
+      setActionMessage(errorMsg);
+      setTimeout(() => setActionMessage(''), 5000);
+    }
+  };
+
+  const handleDeleteComment = async (postId: number, commentId: number) => {
+    if (!userId) return;
+    
+    try {
+      await commentAPI.deleteComment(commentId);
+      
+      // Reload comments
+      const commentsData = await commentAPI.getComments(postId);
+      setComments({ ...comments, [postId]: commentsData });
+    } catch (error: any) {
+      console.error('Failed to delete comment:', error);
+      const errorMsg = error?.response?.data || error?.message || 'Failed to delete comment. Please try again.';
+      setActionMessage(errorMsg);
+      setTimeout(() => setActionMessage(''), 5000);
+    }
+  };
+
+  const handleReplyToComment = (postId: number, userId: number, username: string) => {
+    setReplyingTo({ ...replyingTo, [postId]: { userId, username } });
+  };
+
+  const cancelReply = (postId: number) => {
+    setReplyingTo({ ...replyingTo, [postId]: null });
   };
 
   const formatTimeAgo = (date: Date): string => {
@@ -275,8 +346,8 @@ const GroupPage: React.FC = () => {
             <div className={styles.groupBanner}>
               <div className={styles.bannerContent}>
                 <div className={styles.groupIcon}>
-                  <svg className={styles.groupIconSvg} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01.99L14 10.5V22h6zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10s.67 1.5 1.5 1.5zM5.5 6c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2zm2 16v-7H9l-1.5-4.5A1.5 1.5 0 0 0 6 10H4c-.8 0-1.54.37-2.01.99L1 12.5V22h6.5z"/>
+                  <svg className={styles.groupIconSvg} fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
                   </svg>
                 </div>
                 
@@ -356,7 +427,7 @@ const GroupPage: React.FC = () => {
                   </svg>
                   <div className={styles.activityContent}>
                     <div className={styles.activityNumber}>{posts.length}</div>
-                    <div className={styles.activityLabel}>Posts this week</div>
+                    <div className={styles.activityLabel}>Total posts</div>
                   </div>
                 </div>
                 
@@ -365,18 +436,20 @@ const GroupPage: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   <div className={styles.activityContent}>
-                    <div className={styles.activityNumber}>0</div>
+                    <div className={styles.activityNumber}>
+                      {Object.values(comments).reduce((total, commentList) => total + commentList.length, 0)}
+                    </div>
                     <div className={styles.activityLabel}>Comments</div>
                   </div>
                 </div>
                 
                 <div className={styles.activityCard}>
                   <svg className={styles.activityIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   <div className={styles.activityContent}>
-                    <div className={styles.activityNumber}>+{Math.floor(groupInfo.memberCount * 0.1)}</div>
-                    <div className={styles.activityLabel}>New members</div>
+                    <div className={styles.activityNumber}>{groupInfo.memberCount}</div>
+                    <div className={styles.activityLabel}>Members</div>
                   </div>
                 </div>
                 
@@ -421,9 +494,15 @@ const GroupPage: React.FC = () => {
                   <div key={post.postId} className={styles.postCard}>
                     <div className={styles.postHeader}>
                       <div className={styles.postAuthor}>
-                        <div className={styles.authorAvatar}>{userProfile ? `${userProfile.firstName.charAt(0)}${userProfile.lastName.charAt(0)}` : 'A'}</div>
+                        <div className={styles.authorAvatar}>
+                          {post.userProfileImage ? (
+                            <img src={post.userProfileImage} alt={post.username} />
+                          ) : (
+                            post.username.charAt(0).toUpperCase()
+                          )}
+                        </div>
                         <div className={styles.authorInfo}>
-                          <div className={styles.authorName}>{userProfile?.firstName} {userProfile?.lastName}</div>
+                          <div className={styles.authorName}>{post.username}</div>
                           <div className={styles.postTime}>{formatTimeAgo(new Date(post.createdAt))}</div>
                         </div>
                       </div>
@@ -460,10 +539,111 @@ const GroupPage: React.FC = () => {
                         <span className={styles.voteButton}>Likes: {post.likeCount}</span>
                       </div>
                       
-                      <div className={styles.commentButton}>Comments not yet implemented</div>
+                      <button 
+                        className={styles.commentButton}
+                        onClick={() => toggleComments(post.postId)}
+                      >
+                        <svg className={styles.commentIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        {comments[post.postId]?.length || 0} Comments
+                      </button>
                     </div>
                     
-                    {/* Comments removed for now */}
+                    {/* Comments Section */}
+                    {showComments[post.postId] && (
+                      <div className={styles.commentsSection}>
+                        {/* Add Comment Input */}
+                        <div className={styles.addCommentForm}>
+                          {replyingTo[post.postId] && (
+                            <div className={styles.replyingToBar}>
+                              <span>Replying to @{replyingTo[post.postId]?.username}</span>
+                              <button 
+                                className={styles.cancelReplyButton}
+                                onClick={() => cancelReply(post.postId)}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                          <div className={styles.commentInputContainer}>
+                            <div className={styles.commentAvatar}>
+                              {userProfile ? `${userProfile.firstName.charAt(0)}${userProfile.lastName.charAt(0)}` : 'A'}
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Write a comment..."
+                              value={newComment[post.postId] || ''}
+                              onChange={(e) => setNewComment({ ...newComment, [post.postId]: e.target.value })}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  handleSubmitComment(post.postId, e);
+                                }
+                              }}
+                              className={styles.commentInput}
+                            />
+                            <button
+                              className={styles.submitCommentButton}
+                              onClick={() => handleSubmitComment(post.postId)}
+                              disabled={!newComment[post.postId]?.trim()}
+                            >
+                              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Comments List */}
+                        <div className={styles.commentsList}>
+                          {comments[post.postId]?.length === 0 ? (
+                            <div className={styles.noComments}>No comments yet. Be the first to comment!</div>
+                          ) : (
+                            comments[post.postId]?.map((comment) => (
+                              <div key={comment.commentId} className={styles.commentItem}>
+                                <div className={styles.commentAvatar}>
+                                  {comment.userProfileImage ? (
+                                    <img src={comment.userProfileImage} alt={comment.username} />
+                                  ) : (
+                                    comment.username.charAt(0).toUpperCase()
+                                  )}
+                                </div>
+                                <div className={styles.commentContent}>
+                                  <div className={styles.commentHeader}>
+                                    <span className={styles.commentAuthor}>{comment.username}</span>
+                                    <span className={styles.commentTime}>
+                                      {formatTimeAgo(new Date(comment.createdAt))}
+                                    </span>
+                                  </div>
+                                  {comment.replyingToUsername && (
+                                    <div className={styles.replyingToTag}>
+                                      Replying to @{comment.replyingToUsername}
+                                    </div>
+                                  )}
+                                  <p className={styles.commentText}>{comment.content}</p>
+                                  <div className={styles.commentActions}>
+                                    <button
+                                      className={styles.replyButton}
+                                      onClick={() => handleReplyToComment(post.postId, comment.userId, comment.username)}
+                                    >
+                                      Reply
+                                    </button>
+                                    {userId === comment.userId && (
+                                      <button
+                                        className={styles.deleteCommentButton}
+                                        onClick={() => handleDeleteComment(post.postId, comment.commentId)}
+                                      >
+                                        Delete
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -613,28 +793,75 @@ const GroupPage: React.FC = () => {
               <div className={styles.modalOverlay} onClick={() => setShowNewPost(false)}>
                 <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                   <div className={styles.modalContent}>
-                    <h3 className={styles.modalTitle}>Create New Post</h3>
-                    <form onSubmit={handleSubmitPost}>
-                      <input
-                        type="text"
-                        placeholder="Post title..."
-                        value={newPost.title}
-                        onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                        className={styles.modalInput}
-                        required
-                      />
-                      <textarea
-                        placeholder="What's on your mind?"
-                        value={newPost.content}
-                        onChange={(e) => setNewPost({...newPost, content: e.target.value})}
-                        className={styles.modalTextarea}
-                        required
-                      />
+                    <div className={styles.modalHeader}>
+                      <h3 className={styles.modalTitle}>
+                        <div className={styles.modalTitleIcon}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </div>
+                        Create New Post
+                      </h3>
+                      <button 
+                        type="button" 
+                        className={styles.closeModalButton}
+                        onClick={() => setShowNewPost(false)}
+                      >
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <form onSubmit={handleSubmitPost} className={styles.modalForm}>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                          </svg>
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter post title..."
+                          value={newPost.title}
+                          onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                          className={styles.modalInput}
+                          required
+                          maxLength={200}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                          </svg>
+                          Content
+                        </label>
+                        <textarea
+                          placeholder="Share your thoughts with the group..."
+                          value={newPost.content}
+                          onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+                          className={styles.modalTextarea}
+                          required
+                          maxLength={5000}
+                        />
+                        <div className={styles.characterCount}>
+                          {newPost.content.length} / 5000 characters
+                        </div>
+                      </div>
                       <div className={styles.modalActions}>
                         <button type="button" onClick={() => setShowNewPost(false)} className={styles.cancelButton}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
                           Cancel
                         </button>
-                        <button type="submit" className={styles.submitButton}>Post</button>
+                        <button type="submit" className={styles.submitButton}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                          Publish Post
+                        </button>
                       </div>
                     </form>
                   </div>
@@ -645,10 +872,15 @@ const GroupPage: React.FC = () => {
             {/* Delete Group Confirmation Modal */}
             {showDeleteModal && (
               <div className={styles.modalOverlay} onClick={() => setShowDeleteModal(false)}>
-                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                <div className={`${styles.modal} ${styles.confirmationModal}`} onClick={(e) => e.stopPropagation()}>
                   <div className={styles.modalContent}>
-                    <h3 className={styles.modalTitle}>Delete Group</h3>
-                    <p style={{ marginBottom: '1.5rem', color: '#6c757d', lineHeight: '1.6' }}>
+                    <div className={styles.confirmationIcon}>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <h3 className={styles.modalTitle}>Delete Group?</h3>
+                    <p className={styles.confirmationText}>
                       Are you sure you want to delete this group? This action cannot be undone. All posts, members, and data associated with this group will be permanently deleted.
                     </p>
                     <div className={styles.modalActions}>
@@ -657,6 +889,9 @@ const GroupPage: React.FC = () => {
                         onClick={() => setShowDeleteModal(false)} 
                         className={styles.cancelButton}
                       >
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                         Cancel
                       </button>
                       <button 
@@ -664,6 +899,9 @@ const GroupPage: React.FC = () => {
                         onClick={confirmDeleteGroup} 
                         className={styles.submitButton}
                       >
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                         Delete Group
                       </button>
                     </div>
@@ -677,23 +915,66 @@ const GroupPage: React.FC = () => {
               <div className={styles.modalOverlay} onClick={() => setShowEditPostModal(false)}>
                 <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                   <div className={styles.modalContent}>
-                    <h3 className={styles.modalTitle}>Edit Post</h3>
-                    <form onSubmit={handleSubmitEditPost}>
-                      <input
-                        type="text"
-                        placeholder="Post title..."
-                        value={editPostData.title}
-                        onChange={(e) => setEditPostData({...editPostData, title: e.target.value})}
-                        className={styles.modalInput}
-                        required
-                      />
-                      <textarea
-                        placeholder="What's on your mind?"
-                        value={editPostData.content}
-                        onChange={(e) => setEditPostData({...editPostData, content: e.target.value})}
-                        className={styles.modalTextarea}
-                        required
-                      />
+                    <div className={styles.modalHeader}>
+                      <h3 className={styles.modalTitle}>
+                        <div className={styles.modalTitleIcon}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </div>
+                        Edit Post
+                      </h3>
+                      <button 
+                        type="button" 
+                        className={styles.closeModalButton}
+                        onClick={() => {
+                          setShowEditPostModal(false);
+                          setEditingPost(null);
+                          setEditPostData({ title: '', content: '' });
+                        }}
+                      >
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <form onSubmit={handleSubmitEditPost} className={styles.modalForm}>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                          </svg>
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter post title..."
+                          value={editPostData.title}
+                          onChange={(e) => setEditPostData({...editPostData, title: e.target.value})}
+                          className={styles.modalInput}
+                          required
+                          maxLength={200}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                          </svg>
+                          Content
+                        </label>
+                        <textarea
+                          placeholder="Share your thoughts with the group..."
+                          value={editPostData.content}
+                          onChange={(e) => setEditPostData({...editPostData, content: e.target.value})}
+                          className={styles.modalTextarea}
+                          required
+                          maxLength={5000}
+                        />
+                        <div className={styles.characterCount}>
+                          {editPostData.content.length} / 5000 characters
+                        </div>
+                      </div>
                       <div className={styles.modalActions}>
                         <button 
                           type="button" 
@@ -704,9 +985,17 @@ const GroupPage: React.FC = () => {
                           }} 
                           className={styles.cancelButton}
                         >
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
                           Cancel
                         </button>
-                        <button type="submit" className={styles.submitButton}>Update</button>
+                        <button type="submit" className={styles.submitButton}>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Update Post
+                        </button>
                       </div>
                     </form>
                   </div>
@@ -717,10 +1006,15 @@ const GroupPage: React.FC = () => {
             {/* Delete Post Confirmation Modal */}
             {showDeletePostModal && (
               <div className={styles.modalOverlay} onClick={() => setShowDeletePostModal(false)}>
-                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                <div className={`${styles.modal} ${styles.confirmationModal}`} onClick={(e) => e.stopPropagation()}>
                   <div className={styles.modalContent}>
-                    <h3 className={styles.modalTitle}>Delete Post</h3>
-                    <p style={{ marginBottom: '1.5rem', color: '#6c757d', lineHeight: '1.6' }}>
+                    <div className={styles.confirmationIcon}>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <h3 className={styles.modalTitle}>Delete Post?</h3>
+                    <p className={styles.confirmationText}>
                       Are you sure you want to delete this post? This action cannot be undone.
                     </p>
                     <div className={styles.modalActions}>
@@ -732,14 +1026,19 @@ const GroupPage: React.FC = () => {
                         }} 
                         className={styles.cancelButton}
                       >
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                         Cancel
                       </button>
                       <button 
                         type="button" 
                         onClick={confirmDeletePost} 
                         className={styles.submitButton}
-                        style={{ backgroundColor: '#dc3545' }}
                       >
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                         Delete Post
                       </button>
                     </div>
