@@ -77,20 +77,14 @@ const LoginPage: React.FC = () => {
         const profile = await profileAPI.getProfile();
         // If profile exists but has no bio (profile not fully created), redirect to profile creation
         if (!profile || !profile.bio) {
-          setTimeout(() => {
-            navigate('/profile-creation');
-          }, 1500);
+          navigate('/profile-creation');
         } else {
           // Profile exists, go to dashboard
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 1500);
+          navigate('/dashboard');
         }
       } catch (profileError) {
         // Profile doesn't exist, redirect to profile creation
-        setTimeout(() => {
-          navigate('/profile-creation');
-        }, 1500);
+        navigate('/profile-creation');
       }
       
     } catch (error: any) {

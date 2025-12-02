@@ -6,10 +6,10 @@ services:
     container_name: crimson-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: aaaa2828
-      MYSQL_DATABASE: CrimsonConnect
-      MYSQL_USER: appuser
-      MYSQL_PASSWORD: app1234
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -22,29 +22,32 @@ services:
       retries: 5
 
   backend:
-    image: danbik77/crimson-backend:1.0
+    image: kenson05/crimson-backend:1.0
     container_name: crimson-backend
     restart: always
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/CrimsonConnect?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: appuser
-      SPRING_DATASOURCE_PASSWORD: app1234
-      APP_FRONTEND_URL: http://localhost:3000
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      APP_FRONTEND_URL: ${FRONTEND_URL}
+      APP_BASE_URL: ${BASE_URL}
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_JWT_EXPIRATION: ${JWT_EXPIRATION}
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: true
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: true
     depends_on:
       mysql:
         condition: service_healthy
     ports:
       - "8080:8080"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
 
   frontend:
-    image: danbik77/crimson-frontend:1.0
+    image: kenson05/crimson-frontend:1.0
     container_name: crimson-frontend
     restart: always
     ports:
