@@ -72,9 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (token: string) => {
+    setLoading(true);
     tokenManager.setToken(token);
     setIsAuthenticated(true);
     await fetchUserProfile();
+    setLoading(false);
   };
 
   const logout = () => {

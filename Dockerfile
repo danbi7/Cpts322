@@ -8,7 +8,7 @@ RUN chmod +x gradlew && ./gradlew dependencies --no-daemon || true
 COPY src src
 RUN ./gradlew bootJar --no-daemon
 
-FROM eclipse-temurin:17-jre-alpine
+FROM amazoncorretto:17-alpine
 WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring
