@@ -35,9 +35,12 @@ public interface PostMapper {
     void insertPostImage(@Param("postId") Long postId, @Param("imageUrl") String imageUrl);
 
     @Select("""
-        SELECT * FROM posts
-        WHERE group_id = #{groupId}
-        ORDER BY created_at DESC
+        SELECT p.*, u.username, up.profile_image_url as userProfileImage
+        FROM posts p
+        JOIN users u ON p.user_id = u.user_id
+        LEFT JOIN user_profile up ON u.user_id = up.user_id
+        WHERE p.group_id = #{groupId}
+        ORDER BY p.created_at DESC
         LIMIT #{limit} OFFSET #{offset}
     """)
     @Results(id = "postListResultMap", value = {
@@ -45,20 +48,32 @@ public interface PostMapper {
             @Result(property = "groupId", column = "group_id"),
             @Result(property = "userId", column = "user_id"),
             @Result(property = "createdAt", column = "created_at"),
-            @Result(property = "updatedAt", column = "updated_at") })
+            @Result(property = "updatedAt", column = "updated_at"),
+            @Result(property = "viewCount", column = "view_count"),
+            @Result(property = "likeCount", column = "like_count"),
+            @Result(property = "username", column = "username"),
+            @Result(property = "userProfileImage", column = "userProfileImage") })
     List<Post> getPosts(@Param("groupId") Long groupId,
                         @Param("limit") int limit,
                         @Param("offset") int offset);
 
     @Select("""
-        SELECT * FROM posts WHERE post_id = #{postId}
+        SELECT p.*, u.username, up.profile_image_url as userProfileImage
+        FROM posts p
+        JOIN users u ON p.user_id = u.user_id
+        LEFT JOIN user_profile up ON u.user_id = up.user_id
+        WHERE p.post_id = #{postId}
     """)
     @Results(id = "postResultMap", value = {
             @Result(property = "postId", column = "post_id"),
             @Result(property = "groupId", column = "group_id"),
             @Result(property = "userId", column = "user_id"),
             @Result(property = "createdAt", column = "created_at"),
-            @Result(property = "updatedAt", column = "updated_at") })
+            @Result(property = "updatedAt", column = "updated_at"),
+            @Result(property = "viewCount", column = "view_count"),
+            @Result(property = "likeCount", column = "like_count"),
+            @Result(property = "username", column = "username"),
+            @Result(property = "userProfileImage", column = "userProfileImage") })
     Post getPostById(@Param("postId") Long postId);
 
     @Update("""

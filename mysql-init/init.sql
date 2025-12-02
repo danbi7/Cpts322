@@ -16,7 +16,7 @@ CREATE TABLE user_profile (
     user_id INT NOT NULL,
     nickname VARCHAR(50) NOT NULL,
     bio TEXT,
-    profile_image_url VARCHAR(255),
+    profile_image_url MEDIUMTEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE

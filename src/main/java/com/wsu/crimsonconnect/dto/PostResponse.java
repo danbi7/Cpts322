@@ -23,6 +23,11 @@ public class PostResponse {
     private List<PostImage> images;
     private List<CommentResponse> comments;
 
+    // Author information
+    private Long userId;
+    private String username;
+    private String userProfileImage;
+
     public static PostResponse from(Post post) {
         return PostResponse.builder()
                 .postId(post.getPostId())
@@ -32,6 +37,9 @@ public class PostResponse {
                 .likeCount(post.getLikeCount())
                 .createdAt(post.getCreatedAt())
                 .images(post.getImages())
+                .userId(post.getUserId())
+                .username(post.getUsername())
+                .userProfileImage(post.getUserProfileImage())
                 .build();
     }
 }

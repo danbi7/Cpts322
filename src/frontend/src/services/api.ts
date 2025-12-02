@@ -145,6 +145,9 @@ export interface PostResponseDTO {
     likeCount: number;
     createdAt: string;
     updatedAt?: string;
+    userId: number;
+    username: string;
+    userProfileImage?: string;
 }
 
 
@@ -270,6 +273,23 @@ export const studyGroupAPI = {
     },
 };
 
+export interface CommentRequest {
+    content: string;
+    replyingToUserId?: number;
+}
+
+export interface CommentResponse {
+    commentId: number;
+    postId: number;
+    content: string;
+    createdAt: string;
+    userId: number;
+    username: string;
+    userProfileImage?: string;
+    replyingToUserId?: number;
+    replyingToUsername?: string;
+}
+
 export const postAPI = {
     getPosts: async (groupId: number, userId: number, limit: number = 10, offset: number = 0): Promise<PostResponseDTO[]> => {
         const response = await api.get(`/study-groups/${groupId}/posts?userId=${userId}&limit=${limit}&offset=${offset}`);
@@ -289,5 +309,19 @@ export const postAPI = {
     },
 };
 
+export const commentAPI = {
+    getComments: async (postId: number): Promise<CommentResponse[]> => {
+        const response = await api.get(`/posts/${postId}/comments`);
+        return response.data;
+    },
+    createComment: async (postId: number, data: CommentRequest): Promise<string> => {
+        const response = await api.post(`/posts/${postId}/comments`, data);
+        return response.data;
+    },
+    deleteComment: async (commentId: number): Promise<string> => {
+        const response = await api.delete(`/comments/${commentId}`);
+        return response.data;
+    },
+};
 
 export default api;

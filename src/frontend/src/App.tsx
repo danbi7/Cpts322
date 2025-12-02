@@ -23,7 +23,14 @@ function App() {
             <Route path="/" element={<SignupPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-            <Route path="/profile-creation" element={<ProfileCreation />} />
+            <Route 
+              path="/profile-creation" 
+              element={
+                <ProtectedRoute requireProfile={false}>
+                  <ProfileCreation />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route 
