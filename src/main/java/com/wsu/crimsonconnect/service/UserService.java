@@ -37,49 +37,30 @@ public class UserService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .enabled(false)
+                .enabled(true)
                 .build();
 
         userMapper.insertUser(user);
 
+        /*
         String token = UUID.randomUUID().toString();
         verificationTokenMapper.insertToken(user.getUserId(), token, LocalDateTime.now().plusHours(24));
 
         emailService.sendEmail(user.getEmail(), token);
+        */
     }
 
 
     public void verifyEmail(String token){
-        var verificationToken = verificationTokenMapper.findByToken(token);
-        if(verificationToken == null || verificationToken.getExpiryDate().isBefore(LocalDateTime.now())){
-            throw new IllegalArgumentException("Invalid or expired verification token.");
-        }
-
-        userMapper.enableUser(verificationToken.getUserId()); // changed to token
-        verificationTokenMapper.deleteToken(token);
-
+        throw new UnsupportedOperationException("Email verification disabled in this deployment.");
     }
-    // request password reset
+
     public void requestPasswordReset(String email) {
-        User user = userMapper.findByEmail(email);
-        if (user == null) {
-            throw new IllegalArgumentException("No account found with that email.");
-        }
-
-        String token = UUID.randomUUID().toString();
-        verificationTokenMapper.insertToken(user.getUserId(), token, LocalDateTime.now().plusHours(1));
-        emailService.sendPasswordResetEmail(user.getEmail(), token);
+        throw new UnsupportedOperationException("Password reset email disabled in this deployment.");
     }
 
-    // reset password
     public void resetPassword(String token, String newPassword) {
-        var verificationToken = verificationTokenMapper.findByToken(token);
-        if (verificationToken == null || verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Invalid or expired reset token.");
-        }
-
-        userMapper.updatePassword(verificationToken.getUserId(), passwordEncoder.encode(newPassword));
-        verificationTokenMapper.deleteToken(token);
+        throw new UnsupportedOperationException("Password reset disabled in this deployment.");
     }
 
     public LoginResponse login(LoginRequest request){
@@ -89,9 +70,9 @@ public class UserService {
             throw new RuntimeException("Invalid or expired password.");
         }
 
-        if(!user.getEnabled()){
-            throw new RuntimeException("Email not verified.");
-        }
+        // if(!user.getEnabled()){
+        //     throw new RuntimeException("Email not verified.");
+        // }
 
         String token = jwtService.generateToken(user.getUsername(), user.getUserId());
 
