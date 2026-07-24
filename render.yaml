@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: crimson-connect-ver2-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        sync: false # set manually from your Aiven MySQL connection string
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false # generate with: openssl rand -base64 32
+      - key: SPRING_MAIL_USERNAME
+        sync: false
+      - key: SPRING_MAIL_PASSWORD
+        sync: false # Gmail App Password, not your regular password
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false # e.g. https://crimson-connect-ver2.vercel.app
+    healthCheckPath: /actuator/health
