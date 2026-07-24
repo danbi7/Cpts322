@@ -1,0 +1,55 @@
+# Build artifacts
+build/
+bin/
+.gradle/
+out/
+*.class
+*.jar
+*.war
+
+# IDE and editor files
+.idea/
+.vscode/
+.history/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# Node modules and frontend builds
+node_modules/
+src/frontend/node_modules/
+src/frontend/build/
+
+# Git metadata
+.git/
+.gitignore
+.gitattributes
+
+# Documentation & reports
+README.md
+*.md
+
+# Docker config
+docker-compose.yml
+.dockerignore
+
+# Environment/config
+.env
+.env.*
+application.properties
+src/main/resources/application.properties
+
+# Tests
+src/test/
+*.test.*
+test-results/
+
+# Temporary files
+*.log
+*.tmp
+*.cache
+.DS_Store
+
